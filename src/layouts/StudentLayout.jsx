@@ -25,17 +25,20 @@ export default function StudentLayout() {
             {/* Sidebar */}
             <aside className={`
                 fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 
+                flex flex-col h-full /* <--- IMPORTANT: This allows mt-auto to work */
                 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
                 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
-                <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800">
+                {/* 1. Brand Logo Area */}
+                <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
                     <div className="size-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
                         <span className="material-symbols-outlined text-xl font-bold">school</span>
                     </div>
                     <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">ExamCore</h2>
                 </div>
                 
-                <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                {/* 2. Navigation Area (Scrollable) */}
+                <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
                     {navItems.map((item) => (
                         <NavLink 
                             key={item.to}
@@ -55,18 +58,33 @@ export default function StudentLayout() {
                     ))}
                 </nav>
 
-                <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-3 mb-4 p-2">
-                        <div className="size-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 font-bold shrink-0">
-                            {user?.name?.charAt(0).toUpperCase()}
+                {/* 3. PROFILE & LOGOUT SECTION (Pinned to bottom) */}
+                <div className="mt-auto p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+                    {/* User Card */}
+                    <div className="flex items-center gap-3 p-2 mb-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer">
+                        <div className="relative shrink-0">
+                            <div className="size-10 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm">
+                                {user?.name?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                            <span className="absolute -bottom-0.5 -right-0.5 size-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
                         </div>
-                        <div className="overflow-hidden">
-                            <p className="text-sm font-bold truncate text-slate-800 dark:text-slate-100">{user?.name}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate uppercase tracking-tighter font-medium">Student</p>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-slate-800 dark:text-white truncate">
+                                {user?.name || 'Student'}
+                            </p>
+                            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">
+                                Active Session
+                            </p>
                         </div>
                     </div>
-                    <button onClick={logout} className="w-full py-2.5 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-bold rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition-all border-none cursor-pointer flex items-center justify-center gap-2">
-                        <span className="material-symbols-outlined text-sm">logout</span> Log Out
+
+                    {/* Logout Button */}
+                    <button 
+                        onClick={logout} 
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-bold hover:bg-red-100 dark:hover:bg-red-500/20 transition-all border-none"
+                    >
+                        <span className="material-symbols-outlined text-lg">logout</span>
+                        <span>Sign Out</span>
                     </button>
                 </div>
             </aside>

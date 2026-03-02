@@ -1,13 +1,30 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import StudentDashboard from './components/StudentDashboard';
+import StudentDashboard from './pages/StudentDashboard';
 import ActiveExamInterface from './components/ActiveExamInterface';
-import Login from './components/Login';
+import Login from './pages/Auth/Login';
 import { ThemeProvider, ThemeToggle } from './components/ThemeContext';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import MyResults from './pages/MyResults';
 import Settings from './pages/Settings';
-import StudentLayout from './pages/StudentLayout'; // Ensure this path is correct
+import StudentLayout from './layouts/StudentLayout'; // Ensure this path is correct
+import {ToastProvider} from "./context/ToastContext"
+
+import { useEffect } from "react";
+import { useToast } from "./context/ToastContext";
+import { setLogoutHandler, setToastHandler } from "./utils/api";
+
+const InterceptorConnector = () => {
+  const { showToast } = useToast();
+  const { logout } = useAuth();
+
+  useEffect(() => {
+    setToastHandler(showToast);
+    setLogoutHandler(logout);
+  }, [showToast, logout]);
+
+  return null;
+};
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -26,8 +43,10 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
         <BrowserRouter>
+        <ToastProvider>
+      <AuthProvider>
+        <InterceptorConnector />
           <Routes>
             {/* Public Route */}
             <Route path="/login" element={<Login />} />
@@ -54,9 +73,10 @@ function App() {
             {/* Catch-all fallback */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
+      </AuthProvider>
+      </ToastProvider>
         </BrowserRouter>
         <ThemeToggle />
-      </AuthProvider>
     </ThemeProvider>
   );
 }

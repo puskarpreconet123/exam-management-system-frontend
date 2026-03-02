@@ -22,6 +22,35 @@ export default function ActiveExamInterface() {
     const timerRef = useRef(null);
 
     useEffect(() => {
+    if (!user) return;
+
+    const handleBeforeUnload = (e) => {
+        e.preventDefault();
+        e.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+}, [user]);
+    if (!user) {
+    return (
+        <div className="h-screen flex items-center justify-center bg-slate-100">
+            <div className="bg-white p-8 rounded-xl shadow-lg text-center">
+                <h2 className="text-xl font-bold text-red-600">
+                    Session Expired
+                </h2>
+                <p className="text-slate-600 mt-2">
+                    Your account was logged in from another device.
+                </p>
+            </div>
+        </div>
+    );
+}
+
+    useEffect(() => {
         // Fetch attempt data initially. Realistically, we'd need a specific GET /attempt/:id endpoint, 
         // but since we only have start, we can hit it again if we pretend to resume, However, the backend 
         // /exam/start/:examId requires *examId*, not *attemptId*.
@@ -122,7 +151,7 @@ export default function ActiveExamInterface() {
         // Push an initial state to trap the back button
         window.history.pushState(null, null, window.location.href);
 
-        window.addEventListener('beforeunload', handleBeforeUnload);
+        // window.addEventListener('beforeunload', handleBeforeUnload);
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('popstate', handlePopState);
         document.addEventListener('contextmenu', disableContext);
@@ -130,7 +159,7 @@ export default function ActiveExamInterface() {
         document.addEventListener('paste', disableContext);
 
         return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
+            // window.removeEventListener('beforeunload', handleBeforeUnload);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('popstate', handlePopState);
             document.removeEventListener('contextmenu', disableContext);
@@ -154,7 +183,7 @@ export default function ActiveExamInterface() {
         }, 1000);
 
         return () => clearInterval(timerRef.current);
-    }, [loading, remainingSeconds]);
+    }, [loading]);
 
     const handleSelectOption = (qId, optionObj) => {
         setAnswers(prev => ({ ...prev, [qId]: optionObj }));
@@ -182,14 +211,12 @@ export default function ActiveExamInterface() {
 
     // Auto-save to IndexedDB and Debounced Sync to Backend
     useEffect(() => {
-        if (loading) return;
+         if (loading || !user) return;   // ✅ add !user check
 
-        // Save to IndexedDB immediately
-        db.saveResponses(attemptId, answers, flagged);
+    db.saveResponses(attemptId, answers, flagged);
 
-        // Debounced sync to backend
-        const timeoutId = setTimeout(async () => {
-            if (!navigator.onLine) return;
+    const timeoutId = setTimeout(async () => {
+        if (!navigator.onLine || !user) return; // ✅ extra safety
             setSaving(true);
             try {
                 const answersArray = Object.keys(answers).map(qid => ({
@@ -263,7 +290,7 @@ export default function ActiveExamInterface() {
         <div className="flex flex-col h-screen w-full bg-slate-50 dark:bg-slate-950 overflow-hidden">
             {/* Top Navigation Bar */}
             <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3">
-                <div className="max-w-[1440px] mx-auto flex items-center justify-between">
+                <div className="max-w-360 mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-4 cursor-default">
                         <div className="bg-primary/10 p-2 rounded-lg text-primary">
                             <span className="material-symbols-outlined">quiz</span>
@@ -309,9 +336,9 @@ export default function ActiveExamInterface() {
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex gap-6 p-6 max-w-[1440px] mx-auto w-full min-h-0">
+            <main className="flex-1 flex gap-6 p-6 max-w-360 mx-auto w-full min-h-0">
                 {/* Left: Question Area */}
-                <div className="flex-[3] flex flex-col gap-4 overflow-hidden">
+                <div className="flex-3 flex flex-col gap-4 overflow-hidden">
                     <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 flex flex-col overflow-y-auto">
                         <div className="flex items-center justify-between mb-8 shrink-0">
                             <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-bold">
@@ -327,7 +354,7 @@ export default function ActiveExamInterface() {
                                             checked={flagged.has(currentQuestion._id)}
                                             onChange={toggleFlag}
                                         />
-                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
                                     </div>
                                 </label>
                                 <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-500">
@@ -373,31 +400,42 @@ export default function ActiveExamInterface() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="shrink-0 flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                        <button
-                            onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
-                            disabled={currentIdx === 0}
-                            className="flex items-center gap-2 px-6 py-2.5 font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg hover:text-primary transition-colors border-none outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <span className="material-symbols-outlined text-sm">arrow_back</span>
-                            Previous
-                        </button>
-                        <div className="flex gap-4">
-                            <button
-                                onClick={handleClearSelection}
-                                className="px-6 py-2.5 font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 rounded-lg bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                            >
-                                Clear Selection
-                            </button>
-                            <button
-                                onClick={handleSaveNext}
-                                className="flex items-center gap-2 px-8 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md border-none cursor-pointer"
-                            >
-                                Save & Next
-                                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                            </button>
-                        </div>
-                    </div>
+                    <div className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 md:p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none sticky bottom-6 mx-2 md:mx-6 mb-6">
+  <div className="flex items-center justify-between gap-3">
+
+    {/* Previous Button - Ghost Style */}
+    <button
+      onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
+      disabled={currentIdx === 0}
+      className="group flex items-center gap-2 px-4 md:px-6 py-3 font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all duration-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+    >
+      <span className="material-symbols-outlined text-xl transition-transform group-hover:-translate-x-1">arrow_back</span>
+      <span className="hidden md:inline tracking-wide">Previous</span>
+    </button>
+
+    {/* Center Action: Clear Selection - Minimalist Style */}
+    <button
+      onClick={handleClearSelection}
+      className="flex items-center gap-2 px-4 py-3 font-bold text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-95"
+    >
+      <span className="material-symbols-outlined text-xl">restart_alt</span>
+      <span className="hidden lg:inline text-xs uppercase tracking-widest">Clear Answer</span>
+    </button>
+
+    {/* Save & Next - Primary Action Style */}
+    <button
+      onClick={handleSaveNext}
+      className="group relative flex items-center gap-2 px-6 md:px-10 py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300"
+    >
+      <span className="hidden md:inline tracking-wide">Save & Next</span>
+      <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
+      
+      {/* Subtle Shine Effect */}
+      <div className="absolute inset-0 rounded-xl bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
+    </button>
+
+  </div>
+</div>
                 </div>
 
                 {/* Right: Navigator & Camera */}
