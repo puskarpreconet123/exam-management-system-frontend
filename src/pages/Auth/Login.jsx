@@ -7,14 +7,14 @@ import { useAuth } from '../../components/AuthContext';
 export default function AuthPage() {
     // Mode Toggle
     const [isLogin, setIsLogin] = useState(true);
-    
+
     // Logic States
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('puskar123@gmail.com');
-    const [password, setPassword] = useState('123456');
+    const [email, setEmail] = useState('puskar.preconet@gmail.com');
+    const [password, setPassword] = useState('Puskar@preconet');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    
+
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -26,14 +26,18 @@ export default function AuthPage() {
         try {
             if (isLogin) {
                 // Login Logic
-                await login(email, password);
-                navigate('/dashboard');
+                const response = await login(email, password);
+                if (response.user.role === 'admin') {
+                    navigate('/admin/dashboard');
+                } else {
+                    navigate('/dashboard');
+                }
             } else {
                 // Register Logic
                 await api.post('/auth/register', { name, email, password });
                 // Switch to login after successful registration
                 setIsLogin(true);
-                setError(''); 
+                setError('');
                 alert("Registration successful! Please sign in.");
             }
         } catch (err) {
@@ -52,11 +56,11 @@ export default function AuthPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4 transition-colors duration-300">
             <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 bg-white dark:bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                
+
                 {/* Left Side: Branding */}
                 <div className="hidden md:flex flex-col justify-center p-12 bg-indigo-600 text-white relative overflow-hidden">
                     <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500 rounded-full opacity-20" />
-                    
+
                     <div className="relative z-10">
                         <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/30">
                             <ShieldCheck size={32} className="text-white" />
@@ -65,11 +69,11 @@ export default function AuthPage() {
                             Secure Enterprise <br /> Exam Portal
                         </h1>
                         <p className="text-indigo-100 text-lg mb-10 max-w-sm">
-                            {isLogin 
+                            {isLogin
                                 ? "Access your assessments with military-grade encryption and real-time monitoring."
                                 : "Join thousands of students and start your certification journey today."}
                         </p>
-                        
+
                         <div className="flex items-center gap-4">
                             <div className={`h-1.5 rounded-full transition-all duration-500 ${isLogin ? 'w-12 bg-white' : 'w-6 bg-white/40'}`} />
                             <div className={`h-1.5 rounded-full transition-all duration-500 ${!isLogin ? 'w-12 bg-white' : 'w-6 bg-white/40'}`} />

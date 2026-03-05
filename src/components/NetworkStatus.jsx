@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const NetworkStatus = ({ isSyncing }) => {
+const NetworkStatus = ({ isSyncing, isSyncingBacklog }) => {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [showStatus, setShowStatus] = useState(false);
 
@@ -24,12 +24,16 @@ const NetworkStatus = ({ isSyncing }) => {
         };
     }, []);
 
+    const isAnySyncing = isSyncing || isSyncingBacklog;
+
     return (
         <div className="flex items-center gap-3">
             {/* Sync Indicator */}
-            <div className={`flex items-center gap-1.5 transition-all duration-300 ${isSyncing ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`flex items-center gap-1.5 transition-all duration-300 ${isAnySyncing ? 'opacity-100' : 'opacity-0'}`}>
                 <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Syncing...</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {isSyncingBacklog ? 'Syncing backlog...' : 'Syncing...'}
+                </span>
             </div>
 
             {/* Network Status Badge */}

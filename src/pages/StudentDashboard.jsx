@@ -1,15 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
+import { useToast } from '../context/ToastContext';
 import api from '../utils/api';
 
 export default function StudentDashboard() {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { showToast } = useToast();
+    const location = useLocation();
 
     const [stats, setStats] = useState({ liveSession: [], submitted: [], expired: [], upcoming: [] });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [result, setResult] = useState({ publishedAttempts: [] })
+
+    useEffect(() => {
+        if (location.state?.terminated) {
+            showToast("Your previous exam session was terminated by an administrator.", "error", 8000);
+            // Clear the state so it doesn't show again on manual refresh
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     useEffect(() => {
         const fetchExams = async () => {
@@ -25,6 +37,20 @@ export default function StudentDashboard() {
         fetchExams();
     }, [user.id]);
 
+    useEffect(() => {
+    const fetchResult = async () => {
+        try {
+            const res = await api.get(`/exam/results`);
+            setResult(res.data);
+            console.log(res.data)
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to load Results');
+        }
+    };
+
+    fetchResult();
+}, [user.id]);
+
     const handleJoinLobby = async (examId) => {
         try {
             const res = await api.post(`/exam/start/${examId}`);
@@ -36,10 +62,18 @@ export default function StudentDashboard() {
 
     const activeExams = [...stats.liveSession, ...stats.upcoming];
 
-    const averageScore = stats.submitted.length > 0
-        ? Math.round(stats.submitted.reduce((acc, curr) => acc + curr.score, 0) / stats.submitted.length)
-        : 0;
+let averageScore = 0;
 
+if (result?.publishedAttempts?.length > 0) {
+  const attempts = result.publishedAttempts;
+
+  const totalPercentage = attempts.reduce((acc, curr) => {
+    const percent = (curr.score * 100) / curr.examId.totalQuestions;
+    return acc + percent;
+  }, 0);
+
+  averageScore = Math.round(totalPercentage / attempts.length);
+}
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
             <div className="animate-spin size-10 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -48,7 +82,7 @@ export default function StudentDashboard() {
 
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            
+
             {/* Hero Section */}
             <div className="relative overflow-hidden bg-linear-to-br from-primary to-indigo-700 rounded-3xl p-8 text-white shadow-xl shadow-primary/20">
                 <div className="relative z-10">
@@ -72,25 +106,25 @@ export default function StudentDashboard() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard 
-                    title="Completed" 
-                    value={stats.submitted.length} 
-                    icon="verified" 
-                    color="text-emerald-500" 
+                <StatCard
+                    title="Completed"
+                    value={stats.submitted.length}
+                    icon="verified"
+                    color="text-emerald-500"
                     bgColor="bg-emerald-50 dark:bg-emerald-500/10"
                 />
-                <StatCard 
-                    title="Avg Score" 
-                    value={`${averageScore}%`} 
-                    icon="insights" 
-                    color="text-blue-500" 
+                <StatCard
+                    title="Avg Score"
+                    value={`${averageScore}%`}
+                    icon="insights"
+                    color="text-blue-500"
                     bgColor="bg-blue-50 dark:bg-blue-500/10"
                 />
-                <StatCard 
-                    title="Missed" 
-                    value={stats.expired.length} 
-                    icon="event_busy" 
-                    color="text-rose-500" 
+                <StatCard
+                    title="Missed"
+                    value={stats.expired.length}
+                    icon="event_busy"
+                    color="text-rose-500"
                     bgColor="bg-rose-50 dark:bg-rose-500/10"
                 />
             </div>
@@ -102,7 +136,7 @@ export default function StudentDashboard() {
                         <span className="size-2 rounded-full bg-primary animate-pulse"></span>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white">Active & Upcoming</h2>
                     </div>
-                    
+
                     <div className="space-y-4">
                         {activeExams.length === 0 ? (
                             <div className="bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center text-slate-500 font-medium">
@@ -124,7 +158,7 @@ export default function StudentDashboard() {
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     {isLive ? (
                                         <button
                                             onClick={() => exam.attemptId ? navigate(`/exam/${exam.attemptId}`) : handleJoinLobby(exam._id)}
@@ -147,19 +181,19 @@ export default function StudentDashboard() {
                 <div className="space-y-4">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white px-2">Recent Results</h2>
                     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-                        {stats.submitted.length === 0 ? (
+                        {result.publishedAttempts.length === 0 ? (
                             <p className="text-center text-slate-500 py-6 font-medium">No recent activity</p>
                         ) : (
                             <ul className="space-y-6 list-none p-0 m-0">
-                                {stats.submitted.map(sub => (
+                                {result.publishedAttempts.map(sub => (
                                     <li key={sub._id} className="flex items-center gap-4 group">
                                         <div className="size-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
                                             <span className="material-symbols-outlined text-xl font-bold">check</span>
                                         </div>
                                         <div className="flex-1 overflow-hidden">
                                             <div className="flex justify-between items-center gap-2">
-                                                <p className="text-sm font-bold truncate text-slate-800 dark:text-white">{sub.title}</p>
-                                                <span className="text-emerald-500 font-black text-sm shrink-0">{sub.score}%</span>
+                                                <p className="text-sm font-bold truncate text-slate-800 dark:text-white">{sub.examId.title}</p>
+                                                <span className="text-emerald-500 font-black text-sm shrink-0">{(sub.score * 100)/ sub.examId.totalQuestions}%</span>
                                             </div>
                                             <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mt-0.5">
                                                 {new Date(sub.submittedAt).toLocaleDateString()}

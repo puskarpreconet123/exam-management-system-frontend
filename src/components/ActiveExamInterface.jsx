@@ -4,11 +4,16 @@ import api from '../utils/api';
 import { useAuth } from './AuthContext';
 import * as db from '../utils/indexedDB';
 import NetworkStatus from './NetworkStatus';
+import { useToast } from '../context/ToastContext';
+import { io } from 'socket.io-client';
+
+const SOCKET_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
 
 export default function ActiveExamInterface() {
     const navigate = useNavigate();
     const { attemptId } = useParams();
     const { user } = useAuth();
+    const { showToast } = useToast();
 
     const [examData, setExamData] = useState(null);
     const [questions, setQuestions] = useState([]);
@@ -18,37 +23,40 @@ export default function ActiveExamInterface() {
     const [remainingSeconds, setRemainingSeconds] = useState(0);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [syncingBacklog, setSyncingBacklog] = useState(false);
 
     const timerRef = useRef(null);
+    const violationPendingRef = useRef(null);
+    const socketRef = useRef(null);
 
     useEffect(() => {
-    if (!user) return;
+        if (!user) return;
 
-    const handleBeforeUnload = (e) => {
-        e.preventDefault();
-        e.returnValue = '';
-    };
+        const handleBeforeUnload = (e) => {
+            e.preventDefault();
+            e.returnValue = '';
+        };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+        window.addEventListener('beforeunload', handleBeforeUnload);
 
-    return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-}, [user]);
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [user]);
     if (!user) {
-    return (
-        <div className="h-screen flex items-center justify-center bg-slate-100">
-            <div className="bg-white p-8 rounded-xl shadow-lg text-center">
-                <h2 className="text-xl font-bold text-red-600">
-                    Session Expired
-                </h2>
-                <p className="text-slate-600 mt-2">
-                    Your account was logged in from another device.
-                </p>
+        return (
+            <div className="h-screen flex items-center justify-center bg-slate-100">
+                <div className="bg-white p-8 rounded-xl shadow-lg text-center">
+                    <h2 className="text-xl font-bold text-red-600">
+                        Session Expired
+                    </h2>
+                    <p className="text-slate-600 mt-2">
+                        Your account was logged in from another device.
+                    </p>
+                </div>
             </div>
-        </div>
-    );
-}
+        );
+    }
 
     useEffect(() => {
         // Fetch attempt data initially. Realistically, we'd need a specific GET /attempt/:id endpoint, 
@@ -60,6 +68,21 @@ export default function ActiveExamInterface() {
         // It has GET /exam/:userId which returns live sessions.
         const loadExamData = async () => {
             try {
+                // Initialize Socket Connection for real-time monitoring
+                const socket = io(SOCKET_URL);
+                socketRef.current = socket;
+
+                socket.on('connect', () => {
+                    console.log('Exam Socket Connected');
+                    socket.emit('join_exam_room', attemptId);
+                });
+
+                socket.on('exam_terminated', (data) => {
+                    showToast(data.message || "Your exam session has been terminated.", "error", 10000);
+                    db.clearExamData(attemptId);
+                    navigate('/dashboard', { replace: true, state: { terminated: true } });
+                });
+
                 // Check IndexedDB first for a resumed session
                 const localData = await db.getExamData(attemptId);
                 const localResponses = await db.getResponses(attemptId);
@@ -68,7 +91,7 @@ export default function ActiveExamInterface() {
                 const active = res.data.liveSession.find(e => e.attemptId === attemptId);
 
                 if (!active) {
-                    alert("No active session found.");
+                    showToast("No active session found.", "error");
                     navigate('/dashboard');
                     return;
                 }
@@ -120,7 +143,7 @@ export default function ActiveExamInterface() {
 
             } catch (err) {
                 console.error(err);
-                alert("Failed to load exam.");
+                showToast("Failed to load exam.", "error");
                 navigate('/dashboard');
             } finally {
                 setLoading(false);
@@ -136,14 +159,52 @@ export default function ActiveExamInterface() {
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
-                alert("Warning: Please DO NOT leave the exam screen. This incident has been recorded.");
+                reportViolation("TAB_SWITCH");
+                violationPendingRef.current = "TAB_SWITCH";
+            } else if (violationPendingRef.current) {
+                const type = violationPendingRef.current;
+                showToast(`Warning: ${type === "TAB_SWITCH" ? "Tab switch" : "Activity outside exam"} detected and recorded.`, "error", 6000);
+                violationPendingRef.current = null;
+            }
+        };
+
+        const handleBlur = () => {
+            reportViolation("WINDOW_BLUR");
+            violationPendingRef.current = "WINDOW_BLUR";
+        };
+
+        const handleFocus = () => {
+            if (violationPendingRef.current) {
+                const type = violationPendingRef.current;
+                showToast(`Warning: ${type === "WINDOW_BLUR" ? "Window focus lost" : "Suspicious activity"} detected and recorded.`, "error", 6000);
+                violationPendingRef.current = null;
             }
         };
 
         const handlePopState = (e) => {
             // Push the state forward again to cancel the back button
             window.history.pushState(null, null, window.location.href);
-            alert("Navigation is disabled during the exam. Please use the submit button.");
+            showToast("Navigation is disabled during the exam. Please use the submit button.", "warning");
+        };
+
+        const handleOnline = async () => {
+            if (!user) return;
+            setSyncingBacklog(true);
+            try {
+                const localResponses = await db.getResponses(attemptId);
+                if (localResponses && localResponses.answers) {
+                    const answersArray = Object.keys(localResponses.answers).map(qid => ({
+                        questionId: qid,
+                        selectedOption: localResponses.answers[qid]
+                    }));
+                    await api.post(`/exam/sync/${attemptId}`, { answers: answersArray });
+                    console.log("Backlog synced successfully");
+                }
+            } catch (err) {
+                console.error("Backlog sync failed:", err);
+            } finally {
+                setSyncingBacklog(false);
+            }
         };
 
         const disableContext = (e) => e.preventDefault();
@@ -157,6 +218,9 @@ export default function ActiveExamInterface() {
         document.addEventListener('contextmenu', disableContext);
         document.addEventListener('copy', disableContext);
         document.addEventListener('paste', disableContext);
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('blur', handleBlur);
+        window.addEventListener('focus', handleFocus);
 
         return () => {
             // window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -165,6 +229,13 @@ export default function ActiveExamInterface() {
             document.removeEventListener('contextmenu', disableContext);
             document.removeEventListener('copy', disableContext);
             document.removeEventListener('paste', disableContext);
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('blur', handleBlur);
+            window.removeEventListener('focus', handleFocus);
+
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
         };
     }, [attemptId, user.id, navigate]);
 
@@ -211,12 +282,12 @@ export default function ActiveExamInterface() {
 
     // Auto-save to IndexedDB and Debounced Sync to Backend
     useEffect(() => {
-         if (loading || !user) return;   // ✅ add !user check
+        if (loading || !user) return;   // ✅ add !user check
 
-    db.saveResponses(attemptId, answers, flagged);
+        db.saveResponses(attemptId, answers, flagged);
 
-    const timeoutId = setTimeout(async () => {
-        if (!navigator.onLine || !user) return; // ✅ extra safety
+        const timeoutId = setTimeout(async () => {
+            if (!navigator.onLine || !user) return; // ✅ extra safety
             setSaving(true);
             try {
                 const answersArray = Object.keys(answers).map(qid => ({
@@ -266,12 +337,28 @@ export default function ActiveExamInterface() {
 
             // then submit
             const res = await api.post(`/exam/submit/${attemptId}`);
-            alert(`Exam submitted! Your score: ${res.data.score}`);
+            showToast(res.data.message || "Exam submitted successfully. Your result is pending review.", "success", 6000);
             await db.clearExamData(attemptId);
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
-            alert("Error submitting exam");
+            showToast("Error submitting exam", "error");
+        }
+    };
+
+    const reportViolation = async (type, metadata = {}) => {
+        try {
+            await api.post(`/exam/report-violation/${attemptId}`, {
+                type,
+                metadata: {
+                    ...metadata,
+                    timestamp: new Date().toISOString(),
+                    browser: navigator.userAgent,
+                    url: window.location.href
+                }
+            });
+        } catch (err) {
+            console.error("Failed to report violation:", err);
         }
     };
 
@@ -326,7 +413,7 @@ export default function ActiveExamInterface() {
                         </div>
                         <div className="h-10 w-px bg-slate-200 dark:bg-slate-800"></div>
                         <div className="flex items-center gap-6">
-                            <NetworkStatus isSyncing={saving} />
+                            <NetworkStatus isSyncing={saving} isSyncingBacklog={syncingBacklog} />
                             <button onClick={handleSubmit} className="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-primary/90 transition-all shadow-sm border-none cursor-pointer">
                                 Submit Exam
                             </button>
@@ -401,41 +488,41 @@ export default function ActiveExamInterface() {
 
                     {/* Action Buttons */}
                     <div className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 md:p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none sticky bottom-6 mx-2 md:mx-6 mb-6">
-  <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center justify-between gap-3">
 
-    {/* Previous Button - Ghost Style */}
-    <button
-      onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
-      disabled={currentIdx === 0}
-      className="group flex items-center gap-2 px-4 md:px-6 py-3 font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all duration-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-    >
-      <span className="material-symbols-outlined text-xl transition-transform group-hover:-translate-x-1">arrow_back</span>
-      <span className="hidden md:inline tracking-wide">Previous</span>
-    </button>
+                            {/* Previous Button - Ghost Style */}
+                            <button
+                                onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
+                                disabled={currentIdx === 0}
+                                className="group flex items-center gap-2 px-4 md:px-6 py-3 font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all duration-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                            >
+                                <span className="material-symbols-outlined text-xl transition-transform group-hover:-translate-x-1">arrow_back</span>
+                                <span className="hidden md:inline tracking-wide">Previous</span>
+                            </button>
 
-    {/* Center Action: Clear Selection - Minimalist Style */}
-    <button
-      onClick={handleClearSelection}
-      className="flex items-center gap-2 px-4 py-3 font-bold text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-95"
-    >
-      <span className="material-symbols-outlined text-xl">restart_alt</span>
-      <span className="hidden lg:inline text-xs uppercase tracking-widest">Clear Answer</span>
-    </button>
+                            {/* Center Action: Clear Selection - Minimalist Style */}
+                            <button
+                                onClick={handleClearSelection}
+                                className="flex items-center gap-2 px-4 py-3 font-bold text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-95"
+                            >
+                                <span className="material-symbols-outlined text-xl">restart_alt</span>
+                                <span className="hidden lg:inline text-xs uppercase tracking-widest">Clear Answer</span>
+                            </button>
 
-    {/* Save & Next - Primary Action Style */}
-    <button
-      onClick={handleSaveNext}
-      className="group relative flex items-center gap-2 px-6 md:px-10 py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300"
-    >
-      <span className="hidden md:inline tracking-wide">Save & Next</span>
-      <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
-      
-      {/* Subtle Shine Effect */}
-      <div className="absolute inset-0 rounded-xl bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
-    </button>
+                            {/* Save & Next - Primary Action Style */}
+                            <button
+                                onClick={handleSaveNext}
+                                className="group relative flex items-center gap-2 px-6 md:px-10 py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300"
+                            >
+                                <span className="hidden md:inline tracking-wide">Save & Next</span>
+                                <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
 
-  </div>
-</div>
+                                {/* Subtle Shine Effect */}
+                                <div className="absolute inset-0 rounded-xl bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
+                            </button>
+
+                        </div>
+                    </div>
                 </div>
 
                 {/* Right: Navigator & Camera */}
