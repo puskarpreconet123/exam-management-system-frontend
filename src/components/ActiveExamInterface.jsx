@@ -7,7 +7,7 @@ import NetworkStatus from './NetworkStatus';
 import { useToast } from '../context/ToastContext';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 export default function ActiveExamInterface() {
     const navigate = useNavigate();
