@@ -16,7 +16,9 @@ export default function ExamsPage() {
         medium: 40,
         hard: 30,
         durationMinutes: 60,
-        startTime: ''
+        schedulingType: 'fixed',
+        startTime: '',
+        endTime: '',
     });
 
     const loadExams = async () => {
@@ -41,16 +43,31 @@ export default function ExamsPage() {
         const { name, value } = e.target;
         setForm(prev => ({
             ...prev,
-            [name]: (name === 'title' || name === 'startTime') ? value : Number(value)
+            [name]: (name === 'title' || name === 'startTime' || name === 'endTime' || name === 'schedulingType')
+                ? value
+                : Number(value)
         }));
+    };
+
+    const handleSchedulingTypeChange = (type) => {
+        setForm(prev => ({ ...prev, schedulingType: type, endTime: '' }));
     };
 
     const handleCreate = async (e) => {
         e.preventDefault();
 
-        // Validation
         if (form.easy + form.medium + form.hard !== 100) {
             showToast('Difficulty distribution must sum to 100%', 'error');
+            return;
+        }
+
+        if (form.schedulingType === 'range' && !form.endTime) {
+            showToast('End time is required for time-range exams', 'error');
+            return;
+        }
+
+        if (form.schedulingType === 'range' && new Date(form.endTime) <= new Date(form.startTime)) {
+            showToast('End time must be after start time', 'error');
             return;
         }
 
@@ -65,7 +82,9 @@ export default function ExamsPage() {
                     hard: form.hard
                 },
                 durationMinutes: form.durationMinutes,
-                startTime: form.startTime
+                schedulingType: form.schedulingType,
+                startTime: form.startTime,
+                endTime: form.schedulingType === 'range' ? form.endTime : undefined,
             });
             showToast('Exam created successfully', 'success');
             setForm({
@@ -75,7 +94,9 @@ export default function ExamsPage() {
                 medium: 40,
                 hard: 30,
                 durationMinutes: 60,
-                startTime: ''
+                schedulingType: 'fixed',
+                startTime: '',
+                endTime: '',
             });
             loadExams();
         } catch (err) {
@@ -101,7 +122,7 @@ export default function ExamsPage() {
                 <div className="lg:col-span-2 space-y-4">
                     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                            <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">Live & Scheduled</h2>
+                            <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">Live &amp; Scheduled</h2>
                             <span className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full text-[10px] font-black uppercase">
                                 {exams.length} Total
                             </span>
@@ -120,13 +141,26 @@ export default function ExamsPage() {
                             ) : (
                                 exams.map((exam) => (
                                     <div key={exam._id} className="p-6 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group">
-                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                                             <div className="flex items-center gap-4">
                                                 <div className="size-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/10 transition-all">
                                                     <span className="material-symbols-outlined text-2xl">assignment</span>
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-slate-900 dark:text-white text-lg">{exam.title}</h4>
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <h4 className="font-bold text-slate-900 dark:text-white text-lg">{exam.title}</h4>
+                                                        {exam.schedulingType === 'range' ? (
+                                                            <span className="inline-flex items-center gap-1 bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide">
+                                                                <span className="material-symbols-outlined text-xs">date_range</span>
+                                                                Time Range
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide">
+                                                                <span className="material-symbols-outlined text-xs">schedule</span>
+                                                                Fixed Time
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <div className="flex items-center gap-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-1">
                                                         <span className="flex items-center gap-1">
                                                             <span className="material-symbols-outlined text-sm">schedule</span> {exam.durationMinutes || exam.duration}m
@@ -137,15 +171,31 @@ export default function ExamsPage() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">Starts At</p>
-                                                <p className="text-sm font-black text-slate-700 dark:text-slate-200 mt-0.5">
-                                                    {exam.startTime ? new Date(exam.startTime).toLocaleString("en-IN") : 'Not set'}
-                                                </p>
+
+                                            <div className="text-right shrink-0">
+                                                {exam.schedulingType === 'range' ? (
+                                                    <>
+                                                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">Available From</p>
+                                                        <p className="text-sm font-black text-slate-700 dark:text-slate-200 mt-0.5">
+                                                            {exam.startTime ? new Date(exam.startTime).toLocaleString("en-IN") : 'Not set'}
+                                                        </p>
+                                                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight mt-2">Until</p>
+                                                        <p className="text-sm font-black text-violet-600 dark:text-violet-400 mt-0.5">
+                                                            {exam.endTime ? new Date(exam.endTime).toLocaleString("en-IN") : 'Not set'}
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">Starts At</p>
+                                                        <p className="text-sm font-black text-slate-700 dark:text-slate-200 mt-0.5">
+                                                            {exam.startTime ? new Date(exam.startTime).toLocaleString("en-IN") : 'Not set'}
+                                                        </p>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
 
-                                        {/* Simplified Difficulty Visualization */}
+                                        {/* Difficulty Visualization */}
                                         <div className="mt-4 flex items-center gap-2">
                                             <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex">
                                                 <div style={{ width: `${exam.distribution?.easy}%` }} className="h-full bg-emerald-500 opacity-70"></div>
@@ -171,6 +221,7 @@ export default function ExamsPage() {
                     </div>
 
                     <form onSubmit={handleCreate} className="space-y-4">
+                        {/* Title */}
                         <div className="space-y-1">
                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Exam Title</label>
                             <input
@@ -183,6 +234,7 @@ export default function ExamsPage() {
                             />
                         </div>
 
+                        {/* Questions + Duration */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Questions</label>
@@ -206,6 +258,7 @@ export default function ExamsPage() {
                             </div>
                         </div>
 
+                        {/* Difficulty Distribution */}
                         <div className="space-y-3 pt-2">
                             <div className="flex justify-between items-center mb-1">
                                 <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Difficulty Weight (%)</label>
@@ -220,8 +273,47 @@ export default function ExamsPage() {
                             </div>
                         </div>
 
+                        {/* Scheduling Type Toggle */}
+                        <div className="space-y-3 pt-1">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Scheduling Mode</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => handleSchedulingTypeChange('fixed')}
+                                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border-2 font-bold text-sm transition-all ${form.schedulingType === 'fixed'
+                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                                            : 'border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300'
+                                        }`}
+                                >
+                                    <span className="material-symbols-outlined text-base">schedule</span>
+                                    Fixed Time
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleSchedulingTypeChange('range')}
+                                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border-2 font-bold text-sm transition-all ${form.schedulingType === 'range'
+                                            ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400'
+                                            : 'border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300'
+                                        }`}
+                                >
+                                    <span className="material-symbols-outlined text-base">date_range</span>
+                                    Time Range
+                                </button>
+                            </div>
+
+                            {/* Context hint */}
+                            <p className="text-[11px] text-slate-400 font-medium ml-1">
+                                {form.schedulingType === 'fixed'
+                                    ? 'Students must join within 30 mins of the start time.'
+                                    : 'Students can start anytime within the availability window.'}
+                            </p>
+                        </div>
+
+                        {/* Start Time */}
                         <div className="space-y-1">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Start Schedule</label>
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">
+                                {form.schedulingType === 'range' ? 'Available From' : 'Start Schedule'}
+                            </label>
                             <input
                                 type="datetime-local"
                                 name="startTime"
@@ -232,6 +324,23 @@ export default function ExamsPage() {
                                 className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
                             />
                         </div>
+
+                        {/* End Time — only for range */}
+                        {form.schedulingType === 'range' && (
+                            <div className="space-y-1">
+                                <label className="text-xs font-black uppercase tracking-widest text-violet-400 ml-1">Available Until</label>
+                                <input
+                                    type="datetime-local"
+                                    name="endTime"
+                                    value={form.endTime}
+                                    onChange={handleChange}
+                                    required
+                                    max="9999-12-31T23:59"
+                                    min={form.startTime || undefined}
+                                    className="w-full rounded-2xl border-2 border-violet-300 dark:border-violet-600 bg-violet-50/50 dark:bg-violet-500/5 px-4 py-3 text-sm font-bold focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all outline-none text-slate-900 dark:text-white"
+                                />
+                            </div>
+                        )}
 
                         <button
                             type="submit"

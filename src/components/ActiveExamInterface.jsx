@@ -460,7 +460,8 @@ export default function ActiveExamInterface() {
                             {currentQuestion.options.map(opt => {
                                 const currentSelection = answers[currentQuestion._id];
                                 // Check both object type and direct value, use loose equality for ID safety
-                                const isSelected = (currentSelection?._id !== undefined ? currentSelection._id : currentSelection) == opt._id;
+                                const isSelected = (currentSelection?._id !== undefined ? currentSelection.label : currentSelection) == opt.label;
+                                console.log(currentSelection)
                                 return (
                                     <label
                                         key={opt.value}

@@ -125,7 +125,7 @@ export default function EvaluationPage() {
                         <select
                             value={selectedExamId}
                             onChange={(e) => setSelectedExamId(e.target.value)}
-                            className="appearance-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-4 pr-10 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 shadow-sm hover:border-violet-400 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 focus:outline-none transition-all cursor-pointer min-w-[240px] block outline-none"
+                            className="appearance-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-4 pr-10 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 shadow-sm hover:border-violet-400 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 focus:outline-none transition-all cursor-pointer min-w-60 block outline-none"
                         >
                             <option value="" disabled>Select an exam</option>
                             {exams.map(exam => (

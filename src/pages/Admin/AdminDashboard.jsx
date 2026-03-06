@@ -8,11 +8,11 @@ export default function AdminDashboard() {
     const [stats, setStats] = useState({
         totalExams: 0,
         upcomingExams: 0,
-        activeStudents: 24, // Mocked for now
         avgPassRate: 82     // Mocked for now
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [totalUser, setTotalUser] = useState(0)
     const navigate = useNavigate()
     
     useEffect(() => {
@@ -38,6 +38,17 @@ export default function AdminDashboard() {
         };
         fetchStats();
     }, [showToast]);
+    useEffect(()=>{
+        const fetchUserNo = async() =>{
+            try {
+                const countData = await api.get("/admin/totalUser")
+                setTotalUser(countData.data)
+            } catch (error) {
+                console.log("error inside admin dashboard fetchuserno")
+            }
+        }
+        fetchUserNo()
+    },[])
 
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -98,7 +109,7 @@ export default function AdminDashboard() {
                 />
                 <StatCard
                     title="Active Students"
-                    value={stats.activeStudents}
+                    value={totalUser}
                     icon="group"
                     color="text-emerald-600"
                     bgColor="bg-emerald-50 dark:bg-emerald-500/10"

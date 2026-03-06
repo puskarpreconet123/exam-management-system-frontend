@@ -219,7 +219,7 @@ export default function MonitoringPage() {
                                         </td>
                                         <td className="px-10 py-6">
                                             <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
-                                                {new Date(log.updatedAt || log.createdAt).toLocaleDateString()}
+                                                {new Date(log.updatedAt || log.createdAt).toLocaleDateString("en-IN")}
                                             </p>
                                             <p className="text-[11px] font-bold text-slate-400 mt-0.5">
                                                 {new Date(log.updatedAt || log.createdAt).toLocaleTimeString()}
