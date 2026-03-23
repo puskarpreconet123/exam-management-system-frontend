@@ -38,6 +38,7 @@ export const ThemeToggle = () => {
 
     return (
         <button
+            id="global-theme-toggle"
             onClick={toggleTheme}
             className="fixed bottom-6 right-6 z-50 p-4 rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:scale-105 hover:bg-primary/90 transition-all duration-300 flex items-center justify-center cursor-pointer"
             aria-label="Toggle Theme"

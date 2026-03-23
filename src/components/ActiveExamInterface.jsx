@@ -371,6 +371,11 @@ export default function ActiveExamInterface() {
 
     return (
         <div className="flex flex-col h-dvh w-full bg-slate-50 dark:bg-slate-950 overflow-hidden">
+            <style>{`
+                @media (max-width: 1024px) {
+                    #global-theme-toggle { display: none !important; }
+                }
+            `}</style>
             {/* Top Navigation Bar */}
             <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-4 lg:px-6 py-2 md:py-3 z-30 relative">
                 <div className="max-w-360 mx-auto flex items-center justify-between gap-2">
@@ -448,7 +453,7 @@ export default function ActiveExamInterface() {
                             </span>
                             <div className="flex items-center gap-2 lg:gap-4 flex-wrap">
                                 <label className="flex items-center gap-2 cursor-pointer group">
-                                    <span className="text-xs lg:text-sm font-medium text-slate-500 group-hover:text-amber-500 transition-colors">Mark for Review</span>
+                                    <span className="text-xs lg:text-sm font-medium text-slate-500 group-hover:text-amber-500 transition-colors">Review</span>
                                     <div className="relative inline-flex items-center cursor-pointer">
                                         <input
                                             className="sr-only peer"
@@ -529,7 +534,7 @@ export default function ActiveExamInterface() {
                             <button
                                 onClick={handleSaveNext}
                                 disabled={currentIdx === questions.length - 1}
-                                className="group relative flex items-center gap-1 md:gap-2 px-4 md:px-10 py-2 md:py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300 mr-12 sm:mr-16 lg:mr-0 disabled:opacity-40 disabled:hover:shadow-none disabled:hover:bg-indigo-600 dark:disabled:hover:bg-indigo-500 disabled:active:scale-100 disabled:cursor-not-allowed"
+                                className="group relative flex items-center gap-1 md:gap-2 px-4 md:px-10 py-2 md:py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300  lg:mr-0 disabled:opacity-40 disabled:hover:shadow-none disabled:hover:bg-indigo-600 dark:disabled:hover:bg-indigo-500 disabled:active:scale-100 disabled:cursor-not-allowed"
                             >
                                 <span className="hidden md:inline tracking-wide">Save & Next</span>
                                 {/* <span className="inline md:hidden tracking-wide text-sm">Next</span> */}
