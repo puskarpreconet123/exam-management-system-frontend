@@ -375,7 +375,7 @@ export default function ActiveExamInterface() {
     });
 
     return (
-        <div className="flex flex-col h-screen w-full bg-slate-50 dark:bg-slate-950 overflow-hidden">
+        <div className="flex flex-col h-dvh w-full bg-slate-50 dark:bg-slate-950 overflow-hidden">
             {/* Top Navigation Bar */}
             <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-4 lg:px-6 py-2 md:py-3 z-30 relative">
                 <div className="max-w-360 mx-auto flex items-center justify-between gap-2">
@@ -433,7 +433,7 @@ export default function ActiveExamInterface() {
                             <div className="sm:hidden flex items-center justify-center">
                                 <div className={`w-2 h-2 rounded-full ${saving || syncingBacklog ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
                             </div>
-                            
+
                             <button onClick={handleSubmit} className="bg-primary text-white px-2 py-1 sm:px-4 sm:py-2 lg:px-6 rounded-md lg:rounded-lg font-bold text-[11px] sm:text-xs lg:text-sm hover:bg-primary/90 transition-all shadow-sm border-none cursor-pointer whitespace-nowrap">
                                 Submit
                             </button>
@@ -445,7 +445,7 @@ export default function ActiveExamInterface() {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col lg:flex-row gap-3 lg:gap-6 p-3 lg:p-6 max-w-360 mx-auto w-full min-h-0 overflow-hidden relative">
                 {/* Left: Question Area */}
-                <div className="flex-1 lg:flex-3 flex flex-col gap-3 lg:gap-4 overflow-hidden">
+                <div className="flex-1 lg:flex-3 flex flex-col gap-3 lg:gap-4 overflow-hidden min-h-0">
                     <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 lg:p-8 flex flex-col overflow-y-auto custom-scrollbar">
                         <div className="flex flex-wrap items-center justify-between mb-4 lg:mb-8 shrink-0 gap-3">
                             <span className="bg-primary/10 text-primary px-3 lg:px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold">
@@ -550,7 +550,7 @@ export default function ActiveExamInterface() {
 
                 {/* Right: Navigator Mobile Overlay */}
                 {isNavOpen && (
-                    <div 
+                    <div
                         className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
                         onClick={() => setIsNavOpen(false)}
                     />
@@ -558,7 +558,7 @@ export default function ActiveExamInterface() {
 
                 {/* Right: Navigator & Camera */}
                 <div className={`fixed lg:relative top-0 right-0 h-dvh lg:h-auto w-70 sm:w-[320px] lg:w-full lg:max-w-sm z-50 lg:z-auto bg-slate-50 dark:bg-slate-900 lg:bg-transparent p-4 lg:p-0 shadow-2xl lg:shadow-none border-l border-slate-200 dark:border-slate-800 lg:border-none transition-transform duration-300 lg:transform-none lg:flex lg:flex-1 flex flex-col gap-4 overflow-hidden shrink-0 ${isNavOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
-                    
+
                     {/* Mobile Menu Header */}
                     <div className="flex items-center justify-between lg:hidden shrink-0 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
                         <h2 className="font-bold text-slate-800 dark:text-slate-100">Navigator</h2>
