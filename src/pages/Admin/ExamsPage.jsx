@@ -8,6 +8,8 @@ export default function ExamsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [availableSubjects, setAvailableSubjects] = useState([]);
+    const [examSubjects, setExamSubjects] = useState([{ subject: '', count: '' }]);
 
     const [form, setForm] = useState({
         title: '',
@@ -25,8 +27,12 @@ export default function ExamsPage() {
         setLoading(true);
         setError('');
         try {
-            const res = await api.get('/admin/exams');
-            setExams(res.data.data || []);
+            const [examsRes, subjectsRes] = await Promise.all([
+                api.get('/admin/exams'),
+                api.get('/admin/questions/summary').catch(() => ({ data: { data: [] } }))
+            ]);
+            setExams(examsRes.data.data || []);
+            setAvailableSubjects(subjectsRes.data?.data || []);
         } catch (err) {
             setError('Failed to load exams');
             showToast('Error fetching exams', 'error');
@@ -53,6 +59,18 @@ export default function ExamsPage() {
         setForm(prev => ({ ...prev, schedulingType: type, endTime: '' }));
     };
 
+    const handleSubjectChange = (idx, field, value) => {
+        setExamSubjects(prev => {
+            const next = [...prev];
+            next[idx][field] = value;
+            return next;
+        });
+    };
+
+    const handleRemoveSubject = (idx) => {
+        setExamSubjects(prev => prev.filter((_, i) => i !== idx));
+    };
+
     const handleCreate = async (e) => {
         e.preventDefault();
 
@@ -60,6 +78,20 @@ export default function ExamsPage() {
             showToast('Difficulty distribution must sum to 100%', 'error');
             return;
         }
+
+        if (examSubjects.length === 0) {
+            showToast('Please add at least one subject', 'error');
+            return;
+        }
+
+        const validSubjects = examSubjects.filter(s => s.subject && Number(s.count) > 0);
+        if (validSubjects.length !== examSubjects.length) {
+            showToast('Please select a subject and valid count for all added subjects', 'error');
+            return;
+        }
+
+        const subjectsPayload = validSubjects.map(s => ({ subject: s.subject, count: Number(s.count) }));
+        const calculatedTotal = subjectsPayload.reduce((sum, s) => sum + s.count, 0);
 
         if (form.schedulingType === 'range' && !form.endTime) {
             showToast('End time is required for time-range exams', 'error');
@@ -75,12 +107,13 @@ export default function ExamsPage() {
         try {
             await api.post('/admin/exams', {
                 title: form.title,
-                totalQuestions: form.totalQuestions,
+                totalQuestions: calculatedTotal,
                 difficultyDistribution: {
                     easy: form.easy,
                     medium: form.medium,
                     hard: form.hard
                 },
+                subjects: subjectsPayload,
                 durationMinutes: form.durationMinutes,
                 schedulingType: form.schedulingType,
                 startTime: form.startTime,
@@ -98,6 +131,7 @@ export default function ExamsPage() {
                 startTime: '',
                 endTime: '',
             });
+            setExamSubjects([{ subject: '', count: '' }]);
             loadExams();
         } catch (err) {
             showToast(err.response?.data?.message || 'Failed to create exam', 'error');
@@ -234,18 +268,8 @@ export default function ExamsPage() {
                             />
                         </div>
 
-                        {/* Questions + Duration */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Questions</label>
-                                <input
-                                    type="number"
-                                    name="totalQuestions"
-                                    value={form.totalQuestions}
-                                    onChange={handleChange}
-                                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
-                                />
-                            </div>
+                        {/* Subjects + Duration */}
+                        <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-1">
                                 <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Duration (min)</label>
                                 <input
@@ -256,6 +280,51 @@ export default function ExamsPage() {
                                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
                                 />
                             </div>
+                        </div>
+
+                        {/* Subjects */}
+                        <div className="space-y-3 pt-2">
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Subjects & Questions</label>
+                                <span className="text-[10px] font-black rounded-lg px-2 py-0.5 text-indigo-500 bg-indigo-50">
+                                    Total: {examSubjects.reduce((sum, s) => sum + (Number(s.count) || 0), 0)} Qs
+                                </span>
+                            </div>
+                            {examSubjects.map((s, idx) => (
+                                <div key={idx} className="flex gap-2 min-w-0 items-center">
+                                    <select
+                                        value={s.subject}
+                                        onChange={(e) => handleSubjectChange(idx, 'subject', e.target.value)}
+                                        className="flex-1 truncate rounded-2xl border min-w-0 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:border-indigo-500 transition-all outline-none"
+                                    >
+                                        <option value="" disabled>Select Subject</option>
+                                        {availableSubjects.map((asub) => (
+                                            <option key={asub.subject} value={asub.subject}>
+                                                {asub.subject} ({asub.total} available)
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <input
+                                        type="number"
+                                        placeholder="count"
+                                        value={s.count}
+                                        onChange={(e) => handleSubjectChange(idx, 'count', e.target.value)}
+                                        className="w-20 shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
+                                    />
+                                    {examSubjects.length > 1 && (
+                                        <button type="button" onClick={() => handleRemoveSubject(idx)} className="text-rose-500 hover:text-rose-600 p-2 shrink-0">
+                                            <span className="material-symbols-outlined">delete</span>
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => setExamSubjects(prev => [...prev, { subject: '', count: '' }])}
+                                className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer border-none"
+                            >
+                                <span className="material-symbols-outlined text-sm">add</span> Add Subject
+                            </button>
                         </div>
 
                         {/* Difficulty Distribution */}

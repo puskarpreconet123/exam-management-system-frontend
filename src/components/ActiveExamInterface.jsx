@@ -96,20 +96,6 @@ export default function ActiveExamInterface() {
                     return;
                 }
 
-                // If we have local data, use it, otherwise hit start
-                let questionsList = [];
-                let initialAnswers = {};
-                let initialFlagged = new Set();
-                let initialRemaining = 0;
-
-                if (localData && localData.questions) {
-                    questionsList = localData.questions;
-                    initialRemaining = localData.remainingTime; // Ideally we sync this or use local
-                    // However, timer should ideally come from backend to be safe.
-                    // Let's still hit start to get the latest authoritative state from backend
-                    // but we will merge it with local answers if any.
-                }
-
                 const attemptRes = await api.post(`/exam/start/${active._id}`);
                 setExamData(active);
                 setQuestions(attemptRes.data.questions);
@@ -317,7 +303,7 @@ export default function ActiveExamInterface() {
             questionId: qid,
             selectedOption: answers[qid]
         }));
-        
+
         api.post(`/exam/sync/${attemptId}`, { answers: answersArray })
             .catch(err => console.error(err))
             .finally(() => setSaving(false));
@@ -370,6 +356,22 @@ export default function ActiveExamInterface() {
     const h = Math.floor(remainingSeconds / 3600);
     const m = Math.floor((remainingSeconds % 3600) / 60);
     const s = remainingSeconds % 60;
+
+    // Group questions by subject then difficulty
+    const groupedQuestions = [];
+    questions.forEach((q, idx) => {
+        let subjectGroup = groupedQuestions.find(g => g.subject === q.subject);
+        if (!subjectGroup) {
+            subjectGroup = { subject: q.subject || 'General', difficulties: [] };
+            groupedQuestions.push(subjectGroup);
+        }
+        let diffGroup = subjectGroup.difficulties.find(d => d.difficulty === q.difficulty);
+        if (!diffGroup) {
+            diffGroup = { difficulty: q.difficulty || 'unsorted', items: [] };
+            subjectGroup.difficulties.push(diffGroup);
+        }
+        diffGroup.items.push({ q, idx });
+    });
 
     return (
         <div className="flex flex-col h-screen w-full bg-slate-50 dark:bg-slate-950 overflow-hidden">
@@ -548,38 +550,54 @@ export default function ActiveExamInterface() {
                         <div className="p-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
                             <h3 className="font-bold text-slate-800 dark:text-slate-100">Question Navigator</h3>
                         </div>
-                        <div className="p-4 flex-1 overflow-y-auto w-full">
-                            <div className="flex flex-wrap gap-2 w-full justify-start">
-                                {questions.map((q, idx) => {
-                                    const isCurrent = idx === currentIdx;
-                                    const isAnswered = !!answers[q._id];
-                                    const isFlagged = flagged.has(q._id);
+                        <div className="p-4 flex-1 overflow-y-auto w-full custom-scrollbar">
+                            <div className="flex flex-col gap-6 w-full">
+                                {groupedQuestions.map(group => (
+                                    <div key={group.subject} className="space-y-3">
+                                        <h4 className="text-sm font-black uppercase tracking-widest text-slate-500 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                            {group.subject}
+                                        </h4>
+                                        {group.difficulties.map(diff => (
+                                            <div key={diff.difficulty} className="space-y-2">
+                                                <p className="text-[10px] font-bold uppercase text-slate-400 ml-1">
+                                                    {diff.difficulty} ({diff.items.length})
+                                                </p>
+                                                <div className="flex flex-wrap gap-2 w-full justify-start">
+                                                    {diff.items.map(({ q, idx }) => {
+                                                        const isCurrent = idx === currentIdx;
+                                                        const isAnswered = !!answers[q._id];
+                                                        const isFlagged = flagged.has(q._id);
 
-                                    let btnClass = "relative flex items-center justify-center rounded-lg text-xs font-bold cursor-pointer transition-colors border-none aspect-square w-10 ";
+                                                        let btnClass = "relative flex items-center justify-center rounded-lg text-xs font-bold cursor-pointer transition-colors border-none aspect-square w-10 ";
 
-                                    if (isCurrent) {
-                                        btnClass += "ring-2 ring-primary ring-offset-2 dark:ring-offset-slate-900 bg-primary/20 text-primary";
-                                    } else if (isFlagged && !isAnswered) {
-                                        btnClass += "bg-amber-500 text-white hover:bg-amber-600";
-                                    } else if (isAnswered) {
-                                        btnClass += "bg-emerald-500 text-white hover:bg-emerald-600";
-                                    } else {
-                                        btnClass += "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700";
-                                    }
+                                                        if (isCurrent) {
+                                                            btnClass += "ring-2 ring-primary ring-offset-2 dark:ring-offset-slate-900 bg-primary/20 text-primary";
+                                                        } else if (isFlagged && !isAnswered) {
+                                                            btnClass += "bg-amber-500 text-white hover:bg-amber-600";
+                                                        } else if (isAnswered) {
+                                                            btnClass += "bg-emerald-500 text-white hover:bg-emerald-600";
+                                                        } else {
+                                                            btnClass += "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700";
+                                                        }
 
-                                    return (
-                                        <button
-                                            key={q._id}
-                                            onClick={() => setCurrentIdx(idx)}
-                                            className={btnClass}
-                                        >
-                                            {isFlagged && isAnswered && (
-                                                <span className="absolute -top-1 -right-1 text-[8px] text-amber-300 drop-shadow-md">★</span>
-                                            )}
-                                            {idx + 1}
-                                        </button>
-                                    );
-                                })}
+                                                        return (
+                                                            <button
+                                                                key={q._id}
+                                                                onClick={() => setCurrentIdx(idx)}
+                                                                className={btnClass}
+                                                            >
+                                                                {isFlagged && isAnswered && (
+                                                                    <span className="absolute -top-1 -right-1 text-[8px] text-amber-300 drop-shadow-md">★</span>
+                                                                )}
+                                                                {idx + 1}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
