@@ -24,6 +24,7 @@ export default function ActiveExamInterface() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [syncingBacklog, setSyncingBacklog] = useState(false);
+    const [isNavOpen, setIsNavOpen] = useState(false);
 
     const timerRef = useRef(null);
     const violationPendingRef = useRef(null);
@@ -376,46 +377,65 @@ export default function ActiveExamInterface() {
     return (
         <div className="flex flex-col h-screen w-full bg-slate-50 dark:bg-slate-950 overflow-hidden">
             {/* Top Navigation Bar */}
-            <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3">
-                <div className="max-w-360 mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4 cursor-default">
-                        <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                            <span className="material-symbols-outlined">quiz</span>
+            <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-4 lg:px-6 py-2 md:py-3 z-30 relative">
+                <div className="max-w-360 mx-auto flex items-center justify-between gap-2">
+                    {/* Left: Hamburger & Title */}
+                    <div className="flex items-center gap-1 sm:gap-3 flex-1 min-w-0">
+                        <button
+                            onClick={() => setIsNavOpen(!isNavOpen)}
+                            className="lg:hidden p-1.5 sm:p-2 -ml-1 sm:-ml-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0"
+                            aria-label="Toggle Navigation"
+                        >
+                            <span className="material-symbols-outlined text-[20px] sm:text-[24px]">{isNavOpen ? 'close' : 'menu'}</span>
+                        </button>
+                        <div className="bg-primary/10 p-1.5 sm:p-2 rounded-lg text-primary hidden sm:block shrink-0">
+                            <span className="material-symbols-outlined text-[20px] sm:text-[24px]">quiz</span>
                         </div>
-                        <div>
-                            <h1 className="text-lg font-bold leading-tight tracking-tight">{examData?.title}</h1>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Time Limit: {examData?.duration} Mins</p>
+                        <div className="flex flex-col truncate">
+                            <h1 className="text-sm sm:text-base lg:text-lg font-bold leading-tight tracking-tight truncate">{examData?.title}</h1>
+                            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate hidden sm:block">Time Limit: {examData?.duration} Mins</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-8">
+
+                    {/* Right: Timer, Status, Submit */}
+                    <div className="flex items-center gap-1 sm:gap-4 lg:gap-8 shrink-0">
                         {/* Countdown Timer */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-0.5 sm:gap-1 lg:gap-2">
                             <div className="flex flex-col items-center">
-                                <div className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">
-                                    <span className="text-xl font-bold text-primary">{String(h).padStart(2, '0')}</span>
+                                <div className="bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-md lg:rounded-lg">
+                                    <span className="text-[11px] sm:text-lg lg:text-xl font-bold text-primary">{String(h).padStart(2, '0')}</span>
                                 </div>
-                                <span className="text-[10px] uppercase font-bold text-slate-400">Hours</span>
+                                <span className="text-[8px] lg:text-[10px] uppercase font-bold text-slate-400 hidden sm:block">Hours</span>
                             </div>
-                            <span className="font-bold text-slate-300">:</span>
+                            <span className="font-bold text-slate-300 text-xs sm:text-sm">:</span>
                             <div className="flex flex-col items-center">
-                                <div className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">
-                                    <span className="text-xl font-bold text-primary">{String(m).padStart(2, '0')}</span>
+                                <div className="bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-md lg:rounded-lg">
+                                    <span className="text-[11px] sm:text-lg lg:text-xl font-bold text-primary">{String(m).padStart(2, '0')}</span>
                                 </div>
-                                <span className="text-[10px] uppercase font-bold text-slate-400">Mins</span>
+                                <span className="text-[8px] lg:text-[10px] uppercase font-bold text-slate-400 hidden sm:block">Mins</span>
                             </div>
-                            <span className="font-bold text-slate-300">:</span>
+                            <span className="font-bold text-slate-300 text-xs sm:text-sm">:</span>
                             <div className="flex flex-col items-center">
-                                <div className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">
-                                    <span className={s < 60 && m === 0 ? "text-xl font-bold text-red-500" : "text-xl font-bold text-primary"}>{String(s).padStart(2, '0')}</span>
+                                <div className="bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-md lg:rounded-lg">
+                                    <span className={s < 60 && m === 0 ? "text-[11px] sm:text-lg lg:text-xl font-bold text-red-500" : "text-[11px] sm:text-lg lg:text-xl font-bold text-primary"}>{String(s).padStart(2, '0')}</span>
                                 </div>
-                                <span className="text-[10px] uppercase font-bold text-slate-400">Secs</span>
+                                <span className="text-[8px] lg:text-[10px] uppercase font-bold text-slate-400 hidden sm:block">Secs</span>
                             </div>
                         </div>
-                        <div className="h-10 w-px bg-slate-200 dark:bg-slate-800"></div>
-                        <div className="flex items-center gap-6">
-                            <NetworkStatus isSyncing={saving} isSyncingBacklog={syncingBacklog} />
-                            <button onClick={handleSubmit} className="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-primary/90 transition-all shadow-sm border-none cursor-pointer">
-                                Submit Exam
+
+                        <div className="hidden sm:block h-6 lg:h-10 w-px bg-slate-200 dark:bg-slate-800"></div>
+
+                        <div className="flex items-center gap-2 lg:gap-6">
+                            <div className="hidden sm:block">
+                                <NetworkStatus isSyncing={saving} isSyncingBacklog={syncingBacklog} />
+                            </div>
+                            {/* Mobile network indicator dot */}
+                            <div className="sm:hidden flex items-center justify-center">
+                                <div className={`w-2 h-2 rounded-full ${saving || syncingBacklog ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+                            </div>
+                            
+                            <button onClick={handleSubmit} className="bg-primary text-white px-2 py-1 sm:px-4 sm:py-2 lg:px-6 rounded-md lg:rounded-lg font-bold text-[11px] sm:text-xs lg:text-sm hover:bg-primary/90 transition-all shadow-sm border-none cursor-pointer whitespace-nowrap">
+                                Submit
                             </button>
                         </div>
                     </div>
@@ -423,17 +443,17 @@ export default function ActiveExamInterface() {
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex gap-6 p-6 max-w-360 mx-auto w-full min-h-0">
+            <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 p-3 lg:p-6 max-w-360 mx-auto w-full min-h-0 overflow-y-auto lg:overflow-hidden relative">
                 {/* Left: Question Area */}
-                <div className="flex-3 flex flex-col gap-4 overflow-hidden">
-                    <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 flex flex-col overflow-y-auto">
-                        <div className="flex items-center justify-between mb-8 shrink-0">
-                            <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-bold">
+                <div className="lg:flex-3 flex flex-col gap-4 lg:overflow-hidden shrink-0 lg:shrink">
+                    <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 lg:p-8 flex flex-col lg:overflow-y-auto">
+                        <div className="flex flex-wrap items-center justify-between mb-4 lg:mb-8 shrink-0 gap-3">
+                            <span className="bg-primary/10 text-primary px-3 lg:px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold">
                                 Question {currentIdx + 1} of {questions.length}
                             </span>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 lg:gap-4 flex-wrap">
                                 <label className="flex items-center gap-2 cursor-pointer group">
-                                    <span className="text-sm font-medium text-slate-500 group-hover:text-amber-500 transition-colors">Mark for Review</span>
+                                    <span className="text-xs lg:text-sm font-medium text-slate-500 group-hover:text-amber-500 transition-colors">Mark for Review</span>
                                     <div className="relative inline-flex items-center cursor-pointer">
                                         <input
                                             className="sr-only peer"
@@ -441,22 +461,22 @@ export default function ActiveExamInterface() {
                                             checked={flagged.has(currentQuestion._id)}
                                             onChange={toggleFlag}
                                         />
-                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
+                                        <div className="w-10 h-5 md:w-11 md:h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 md:after:h-5 md:after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
                                     </div>
                                 </label>
-                                <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-500">
+                                <span className="px-2 py-1 lg:px-3 lg:py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-[10px] lg:text-xs font-bold text-slate-500">
                                     {currentQuestion.subject} - {currentQuestion.difficulty}
                                 </span>
                             </div>
                         </div>
 
-                        <div className="prose dark:prose-invert max-w-none shrink-0 border-b border-slate-100 dark:border-slate-800 pb-6 mb-6">
-                            <p className="text-xl font-medium leading-relaxed dark:text-slate-100">
+                        <div className="prose dark:prose-invert max-w-none shrink-0 border-b border-slate-100 dark:border-slate-800 pb-4 lg:pb-6 mb-4 lg:mb-6">
+                            <p className="text-lg lg:text-xl font-medium leading-relaxed dark:text-slate-100">
                                 {currentQuestion.text}
                             </p>
                         </div>
 
-                        <div className="space-y-4 flex-1">
+                        <div className="space-y-3 lg:space-y-4 flex-1">
                             {currentQuestion.options.map(opt => {
                                 const currentSelection = answers[currentQuestion._id];
                                 // Check both object type and direct value, use loose equality for ID safety
@@ -465,7 +485,7 @@ export default function ActiveExamInterface() {
                                 return (
                                     <label
                                         key={opt.value}
-                                        className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all group ${isSelected
+                                        className={`flex items-start p-3 lg:p-4 border rounded-xl cursor-pointer transition-all group ${isSelected
                                             ? 'border-primary/40 bg-primary/5 dark:border-primary/40 ring-1 ring-primary/20'
                                             : 'border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:bg-primary/5'
                                             }`}
@@ -473,12 +493,12 @@ export default function ActiveExamInterface() {
                                         <input
                                             checked={isSelected}
                                             onChange={() => handleSelectOption(currentQuestion._id, opt)}
-                                            className="w-5 h-5 text-primary border-slate-300 focus:ring-primary dark:bg-slate-800 dark:border-slate-700 accent-primary cursor-pointer shrink-0"
+                                            className="w-4 h-4 mt-0.5 lg:mt-0 md:w-5 md:h-5 text-primary border-slate-300 focus:ring-primary dark:bg-slate-800 dark:border-slate-700 accent-primary cursor-pointer shrink-0"
                                             name={`answer-${currentQuestion._id}`}
                                             type="radio"
                                             value={opt.value}
                                         />
-                                        <span className={`ml-4 font-medium block w-full ${isSelected ? 'text-primary font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
+                                        <span className={`ml-3 lg:ml-4 text-sm lg:text-base font-medium block w-full ${isSelected ? 'text-primary font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
                                             {opt.value}
                                         </span>
                                     </label>
@@ -488,35 +508,36 @@ export default function ActiveExamInterface() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 md:p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none sticky bottom-6 mx-2 md:mx-6 mb-6">
-                        <div className="flex items-center justify-between gap-3">
+                    <div className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none sticky bottom-16 md:bottom-2 lg:bottom-6 z-10 w-full mb-16 md:mb-2 lg:mb-0">
+                        <div className="flex items-center justify-between gap-2 md:gap-3">
 
                             {/* Previous Button - Ghost Style */}
                             <button
                                 onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
                                 disabled={currentIdx === 0}
-                                className="group flex items-center gap-2 px-4 md:px-6 py-3 font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all duration-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                className="group flex items-center gap-1 md:gap-2 px-3 md:px-6 py-2 md:py-3 font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all duration-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                             >
-                                <span className="material-symbols-outlined text-xl transition-transform group-hover:-translate-x-1">arrow_back</span>
+                                <span className="material-symbols-outlined text-lg md:text-xl transition-transform group-hover:-translate-x-1">arrow_back</span>
                                 <span className="hidden md:inline tracking-wide">Previous</span>
                             </button>
 
                             {/* Center Action: Clear Selection - Minimalist Style */}
                             <button
                                 onClick={handleClearSelection}
-                                className="flex items-center gap-2 px-4 py-3 font-bold text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-95"
+                                className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 md:py-3 font-bold text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-95"
                             >
-                                <span className="material-symbols-outlined text-xl">restart_alt</span>
+                                <span className="material-symbols-outlined text-lg md:text-xl">restart_alt</span>
                                 <span className="hidden lg:inline text-xs uppercase tracking-widest">Clear Answer</span>
                             </button>
 
                             {/* Save & Next - Primary Action Style */}
                             <button
                                 onClick={handleSaveNext}
-                                className="group relative flex items-center gap-2 px-6 md:px-10 py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300"
+                                className="group relative flex items-center gap-1 md:gap-2 px-4 md:px-10 py-2 md:py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300"
                             >
                                 <span className="hidden md:inline tracking-wide">Save & Next</span>
-                                <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
+                                <span className="inline md:hidden tracking-wide text-sm">Next</span>
+                                <span className="material-symbols-outlined text-lg md:text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
 
                                 {/* Subtle Shine Effect */}
                                 <div className="absolute inset-0 rounded-xl bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
@@ -526,27 +547,27 @@ export default function ActiveExamInterface() {
                     </div>
                 </div>
 
+                {/* Right: Navigator Mobile Overlay */}
+                {isNavOpen && (
+                    <div 
+                        className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+                        onClick={() => setIsNavOpen(false)}
+                    />
+                )}
+
                 {/* Right: Navigator & Camera */}
-                <div className="flex-1 flex flex-col gap-4 overflow-hidden w-full max-w-sm">
-                    {/* Proctoring Feed 
-                    <div className="relative bg-black rounded-xl overflow-hidden aspect-video shadow-lg ring-4 ring-white dark:ring-slate-800 shrink-0">
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-3">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                <span className="text-[10px] text-white font-bold tracking-widest uppercase">Live Proctoring</span>
-                            </div>
-                        </div>
-                        <div
-                            className="w-full h-full bg-slate-800 flex items-center justify-center bg-cover bg-center"
-                            aria-label="Student webcam view from computer camera"
-                            style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuD2swPOqGVpQgus8HPnpgzGeQZQ39MGRnydsdtsh0SvPV1LJTZgEfgptejbihyA3h3j9DtG6jDJaKkdc_w05VaRPYjJPT6hpnzChLCKJzgHx0gzH3dHQ9IPN5jyiRmi3T6A4ea58uIzQg05EizWKUXBBLmEmpvM1racujRXSw2x0pIXmly8QEBYyMth-diuwllVFKJp5Pk_k4_P25JpvIR6XL4pjt-hV3kQvHiKMI1jZt-D_yRvdWL2jdXfHXLOFN6fpSGbZ0JnuYg')" }}
-                        >
-                            <span className="material-symbols-outlined text-slate-600 text-4xl">videocam</span>
-                        </div>
-                    </div> */}
+                <div className={`fixed lg:relative top-0 right-0 h-[100dvh] lg:h-auto w-[280px] sm:w-[320px] lg:w-full lg:max-w-sm z-50 lg:z-auto bg-slate-50 dark:bg-slate-900 lg:bg-transparent p-4 lg:p-0 shadow-2xl lg:shadow-none border-l border-slate-200 dark:border-slate-800 lg:border-none transition-transform duration-300 lg:transform-none lg:flex lg:flex-1 flex flex-col gap-4 overflow-hidden shrink-0 ${isNavOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
+                    
+                    {/* Mobile Menu Header */}
+                    <div className="flex items-center justify-between lg:hidden shrink-0 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
+                        <h2 className="font-bold text-slate-800 dark:text-slate-100">Navigator</h2>
+                        <button onClick={() => setIsNavOpen(false)} className="p-2 -mr-2 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg">
+                            <span className="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
 
                     {/* Question Navigator */}
-                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex-1 flex flex-col min-h-0">
+                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm lg:border border-slate-200 dark:border-slate-800 flex-1 flex flex-col min-h-[300px] lg:min-h-0 overflow-hidden">
                         <div className="p-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
                             <h3 className="font-bold text-slate-800 dark:text-slate-100">Question Navigator</h3>
                         </div>
@@ -583,7 +604,10 @@ export default function ActiveExamInterface() {
                                                         return (
                                                             <button
                                                                 key={q._id}
-                                                                onClick={() => setCurrentIdx(idx)}
+                                                                onClick={() => {
+                                                                    setCurrentIdx(idx);
+                                                                    setIsNavOpen(false);
+                                                                }}
                                                                 className={btnClass}
                                                             >
                                                                 {isFlagged && isAnswered && (

@@ -309,7 +309,7 @@ export default function ExamsPage() {
                                         placeholder="count"
                                         value={s.count}
                                         onChange={(e) => handleSubjectChange(idx, 'count', e.target.value)}
-                                        className="w-20 shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
+                                        className="w-24 shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
                                     />
                                     {examSubjects.length > 1 && (
                                         <button type="button" onClick={() => handleRemoveSubject(idx)} className="text-rose-500 hover:text-rose-600 p-2 shrink-0">
