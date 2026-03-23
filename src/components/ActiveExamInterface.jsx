@@ -305,24 +305,22 @@ export default function ActiveExamInterface() {
         return () => clearTimeout(timeoutId);
     }, [answers, flagged, attemptId, loading]);
 
-    const handleSaveNext = async () => {
-        setSaving(true);
-        try {
-            // sync answers
-            const answersArray = Object.keys(answers).map(qid => ({
-                questionId: qid,
-                selectedOption: answers[qid]
-            }));
-            await api.post(`/exam/sync/${attemptId}`, { answers: answersArray });
-
-            if (currentIdx < questions.length - 1) {
-                setCurrentIdx(prev => prev + 1);
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setSaving(false);
+    const handleSaveNext = () => {
+        // Switch question instantly for better UX
+        if (currentIdx < questions.length - 1) {
+            setCurrentIdx(prev => prev + 1);
         }
+
+        // Sync answers in the background
+        setSaving(true);
+        const answersArray = Object.keys(answers).map(qid => ({
+            questionId: qid,
+            selectedOption: answers[qid]
+        }));
+        
+        api.post(`/exam/sync/${attemptId}`, { answers: answersArray })
+            .catch(err => console.error(err))
+            .finally(() => setSaving(false));
     };
 
     const handleSubmit = async () => {
