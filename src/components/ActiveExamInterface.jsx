@@ -443,10 +443,10 @@ export default function ActiveExamInterface() {
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 p-3 lg:p-6 max-w-360 mx-auto w-full min-h-0 overflow-y-auto lg:overflow-hidden relative">
+            <main className="flex-1 flex flex-col lg:flex-row gap-3 lg:gap-6 p-3 lg:p-6 max-w-360 mx-auto w-full min-h-0 overflow-hidden relative">
                 {/* Left: Question Area */}
-                <div className="lg:flex-3 flex flex-col gap-4 lg:overflow-hidden shrink-0 lg:shrink">
-                    <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 lg:p-8 flex flex-col lg:overflow-y-auto">
+                <div className="flex-1 lg:flex-3 flex flex-col gap-3 lg:gap-4 overflow-hidden">
+                    <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 lg:p-8 flex flex-col overflow-y-auto custom-scrollbar">
                         <div className="flex flex-wrap items-center justify-between mb-4 lg:mb-8 shrink-0 gap-3">
                             <span className="bg-primary/10 text-primary px-3 lg:px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold">
                                 Question {currentIdx + 1} of {questions.length}
@@ -508,7 +508,7 @@ export default function ActiveExamInterface() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none sticky bottom-16 md:bottom-2 lg:bottom-6 z-10 w-full mb-16 md:mb-2 lg:mb-0">
+                    <div className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none w-full">
                         <div className="flex items-center justify-between gap-2 md:gap-3">
 
                             {/* Previous Button - Ghost Style */}
@@ -533,10 +533,10 @@ export default function ActiveExamInterface() {
                             {/* Save & Next - Primary Action Style */}
                             <button
                                 onClick={handleSaveNext}
-                                className="group relative flex items-center gap-1 md:gap-2 px-4 md:px-10 py-2 md:py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300"
+                                className="group relative flex items-center gap-1 md:gap-2 px-4 md:px-10 py-2 md:py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300 mr-12 sm:mr-16 lg:mr-0"
                             >
                                 <span className="hidden md:inline tracking-wide">Save & Next</span>
-                                <span className="inline md:hidden tracking-wide text-sm">Next</span>
+                                {/* <span className="inline md:hidden tracking-wide text-sm">Next</span> */}
                                 <span className="material-symbols-outlined text-lg md:text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
 
                                 {/* Subtle Shine Effect */}
@@ -556,7 +556,7 @@ export default function ActiveExamInterface() {
                 )}
 
                 {/* Right: Navigator & Camera */}
-                <div className={`fixed lg:relative top-0 right-0 h-[100dvh] lg:h-auto w-[280px] sm:w-[320px] lg:w-full lg:max-w-sm z-50 lg:z-auto bg-slate-50 dark:bg-slate-900 lg:bg-transparent p-4 lg:p-0 shadow-2xl lg:shadow-none border-l border-slate-200 dark:border-slate-800 lg:border-none transition-transform duration-300 lg:transform-none lg:flex lg:flex-1 flex flex-col gap-4 overflow-hidden shrink-0 ${isNavOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
+                <div className={`fixed lg:relative top-0 right-0 h-dvh lg:h-auto w-70 sm:w-[320px] lg:w-full lg:max-w-sm z-50 lg:z-auto bg-slate-50 dark:bg-slate-900 lg:bg-transparent p-4 lg:p-0 shadow-2xl lg:shadow-none border-l border-slate-200 dark:border-slate-800 lg:border-none transition-transform duration-300 lg:transform-none lg:flex lg:flex-1 flex flex-col gap-4 overflow-hidden shrink-0 ${isNavOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
                     
                     {/* Mobile Menu Header */}
                     <div className="flex items-center justify-between lg:hidden shrink-0 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
@@ -567,7 +567,7 @@ export default function ActiveExamInterface() {
                     </div>
 
                     {/* Question Navigator */}
-                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm lg:border border-slate-200 dark:border-slate-800 flex-1 flex flex-col min-h-[300px] lg:min-h-0 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm lg:border border-slate-200 dark:border-slate-800 flex-1 flex flex-col min-h-75 lg:min-h-0 overflow-hidden">
                         <div className="p-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
                             <h3 className="font-bold text-slate-800 dark:text-slate-100">Question Navigator</h3>
                         </div>
