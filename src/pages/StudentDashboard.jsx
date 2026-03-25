@@ -193,7 +193,7 @@ if (result?.publishedAttempts?.length > 0) {
                                         <div className="flex-1 overflow-hidden">
                                             <div className="flex justify-between items-center gap-2">
                                                 <p className="text-sm font-bold truncate text-slate-800 dark:text-white">{sub.examId.title}</p>
-                                                <span className="text-emerald-500 font-black text-sm shrink-0">{(sub.score * 100)/ sub.examId.totalQuestions}%</span>
+                                                <span className="text-emerald-500 font-black text-sm shrink-0">{(((sub.score * 100) / sub.examId.totalQuestions).toFixed(2)).replace(/\.00$/, '')}%</span>
                                             </div>
                                             <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mt-0.5">
                                                 {new Date(sub.submittedAt).toLocaleDateString()}

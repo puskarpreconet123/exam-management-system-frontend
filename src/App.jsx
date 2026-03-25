@@ -6,6 +6,7 @@ import Login from './pages/Auth/Login';
 import { ThemeProvider, ThemeToggle } from './components/ThemeContext';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import MyResults from './pages/MyResults';
+import ResultDetails from './pages/ResultDetails';
 import Settings from './pages/Settings';
 import StudentLayout from './layouts/StudentLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -86,6 +87,7 @@ function App() {
               }>
                 <Route path="/dashboard" element={<StudentDashboard />} />
                 <Route path="/results" element={<MyResults />} />
+                <Route path="/results/:attemptId" element={<ResultDetails />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Route>
