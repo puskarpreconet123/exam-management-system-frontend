@@ -25,6 +25,7 @@ export default function ActiveExamInterface() {
     const [saving, setSaving] = useState(false);
     const [syncingBacklog, setSyncingBacklog] = useState(false);
     const [isNavOpen, setIsNavOpen] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     const timerRef = useRef(null);
     const violationPendingRef = useRef(null);
@@ -233,7 +234,7 @@ export default function ActiveExamInterface() {
             setRemainingSeconds(prev => {
                 if (prev <= 1) {
                     clearInterval(timerRef.current);
-                    handleSubmit();
+                    handleSubmit(true);
                     return 0;
                 }
                 return prev - 1;
@@ -310,15 +311,27 @@ export default function ActiveExamInterface() {
             .finally(() => setSaving(false));
     };
 
-    const handleSubmit = async () => {
-        if (!window.confirm("Are you sure you want to submit?")) return;
+    const confirmSubmission = () => {
+        setShowConfirmModal(false);
+        handleSubmit(false, true);
+    };
+
+    const handleSubmit = async (isAuto = false, forceSubmit = false) => {
+        if (!isAuto && !forceSubmit) {
+            setShowConfirmModal(true);
+            return;
+        }
         try {
             // sync latest first
             const answersArray = Object.keys(answers).map(qid => ({
                 questionId: qid,
                 selectedOption: answers[qid]
             }));
-            await api.post(`/exam/sync/${attemptId}`, { answers: answersArray });
+            try {
+                await api.post(`/exam/sync/${attemptId}`, { answers: answersArray });
+            } catch (syncErr) {
+                console.warn("Pre-submit sync failed, submitting anyway:", syncErr);
+            }
 
             // then submit
             const res = await api.post(`/exam/submit/${attemptId}`);
@@ -327,7 +340,12 @@ export default function ActiveExamInterface() {
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
-            showToast("Error submitting exam", "error");
+            if (isAuto) {
+                await db.clearExamData(attemptId);
+                navigate('/dashboard');
+            } else {
+                showToast("Error submitting exam", "error");
+            }
         }
     };
 
@@ -434,7 +452,7 @@ export default function ActiveExamInterface() {
                                 <div className={`w-2 h-2 rounded-full ${saving || syncingBacklog ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
                             </div>
 
-                            <button onClick={handleSubmit} className="bg-primary text-white px-2 py-1 sm:px-4 sm:py-2 lg:px-6 rounded-md lg:rounded-lg font-bold text-[11px] sm:text-xs lg:text-sm hover:bg-primary/90 transition-all shadow-sm border-none cursor-pointer whitespace-nowrap">
+                            <button onClick={() => handleSubmit(false)} className="bg-primary text-white px-2 py-1 sm:px-4 sm:py-2 lg:px-6 rounded-md lg:rounded-lg font-bold text-[11px] sm:text-xs lg:text-sm hover:bg-primary/90 transition-all shadow-sm border-none cursor-pointer whitespace-nowrap">
                                 Submit
                             </button>
                         </div>
@@ -639,6 +657,37 @@ export default function ActiveExamInterface() {
                     </div>
                 </div>
             </main>
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-3 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500 rounded-full flex shrink-0">
+                                <span className="material-symbols-outlined">warning</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Submit Exam?</h3>
+                        </div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                            Are you sure you want to finalize your submission? You will not be able to change your answers after this action.
+                        </p>
+                        <div className="flex justify-end gap-3 w-full">
+                            <button 
+                                onClick={() => setShowConfirmModal(false)}
+                                className="flex-1 px-4 py-3 font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all border-none cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmSubmission}
+                                className="flex-1 px-4 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-lg shadow-indigo-600/30 border-none cursor-pointer"
+                            >
+                                Yes, Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
