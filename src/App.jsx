@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import StudentDashboard from './pages/StudentDashboard';
 import ActiveExamInterface from './components/ActiveExamInterface';
 import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
 import { ThemeProvider, ThemeToggle } from './components/ThemeContext';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import MyResults from './pages/MyResults';
@@ -17,7 +18,9 @@ import ExamsPage from './pages/Admin/ExamsPage';
 import QuestionsPage from './pages/Admin/QuestionsPage';
 import MonitoringPage from './pages/Admin/MonitoringPage';
 import EvaluationPage from './pages/Admin/EvaluationPage';
+import ReferralsPage from './pages/Admin/ReferralsPage';
 import AdminSettings from './pages/Admin/AdminSettings';
+import UserManagementPage from './pages/Admin/UserManagementPage';
 
 import { useEffect } from "react";
 import { useToast } from "./context/ToastContext";
@@ -63,6 +66,7 @@ function App() {
             <Routes>
               {/* Public Route */}
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
               {/* Admin Portal Routes */}
               <Route element={
@@ -75,7 +79,9 @@ function App() {
                 <Route path="/admin/questions" element={<QuestionsPage />} />
                 <Route path="/admin/monitoring" element={<MonitoringPage />} />
                 <Route path="/admin/evaluation" element={<EvaluationPage />} />
+                <Route path="/admin/referrals" element={<ReferralsPage />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/users" element={<UserManagementPage />} />
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               </Route>
 

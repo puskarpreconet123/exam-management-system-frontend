@@ -13,6 +13,8 @@ export default function AdminLayout() {
         { to: "/admin/questions", icon: "quiz", label: "Question Bank" },
         { to: "/admin/monitoring", icon: "monitoring", label: "Live Monitoring" },
         { to: "/admin/evaluation", icon: "fact_check", label: "Evaluation" },
+        { to: "/admin/referrals", icon: "group_add", label: "Referrals" },
+        { to: "/admin/users", icon: "manage_accounts", label: "Users" },
         { to: "/admin/settings", icon: "settings", label: "Settings" },
     ];
 

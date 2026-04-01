@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
-import api from '../../utils/api';
+import { useNavigate, Link } from 'react-router-dom';
+import { Mail, Lock, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAuth } from '../../components/AuthContext';
 
-export default function AuthPage() {
-    // Mode Toggle
-    const [isLogin, setIsLogin] = useState(true);
-
+export default function Login() {
     // Logic States
-    const [name, setName] = useState('');
     const [email, setEmail] = useState('puskar.preconet@gmail.com');
     const [password, setPassword] = useState('Puskar@preconet');
     const [error, setError] = useState('');
@@ -24,33 +19,18 @@ export default function AuthPage() {
         setLoading(true);
 
         try {
-            if (isLogin) {
-                // Login Logic
-                const response = await login(email, password);
-                if (response.user.role === 'admin') {
-                    navigate('/admin/dashboard');
-                } else {
-                    navigate('/dashboard');
-                }
+            // Login Logic
+            const response = await login(email, password);
+            if (response.user.role === 'admin') {
+                navigate('/admin/dashboard');
             } else {
-                // Register Logic
-                await api.post('/auth/register', { name, email, password });
-                // Switch to login after successful registration
-                setIsLogin(true);
-                setError('');
-                alert("Registration successful! Please sign in.");
+                navigate('/dashboard');
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Authentication failed. Please try again.');
         } finally {
             setLoading(false);
         }
-    };
-
-    const toggleMode = () => {
-        setIsLogin(!isLogin);
-        setError('');
-        setPassword(''); // Clear password for security when switching
     };
 
     return (
@@ -69,14 +49,12 @@ export default function AuthPage() {
                             Secure Enterprise <br /> Exam Portal
                         </h1>
                         <p className="text-indigo-100 text-lg mb-10 max-w-sm">
-                            {isLogin
-                                ? "Access your assessments with military-grade encryption and real-time monitoring."
-                                : "Join thousands of students and start your certification journey today."}
+                            Access your assessments with military-grade encryption and real-time monitoring.
                         </p>
 
                         <div className="flex items-center gap-4">
-                            <div className={`h-1.5 rounded-full transition-all duration-500 ${isLogin ? 'w-12 bg-white' : 'w-6 bg-white/40'}`} />
-                            <div className={`h-1.5 rounded-full transition-all duration-500 ${!isLogin ? 'w-12 bg-white' : 'w-6 bg-white/40'}`} />
+                            <div className={`h-1.5 rounded-full transition-all duration-500 w-12 bg-white`} />
+                            <div className={`h-1.5 rounded-full transition-all duration-500 w-6 bg-white/40`} />
                         </div>
                     </div>
                 </div>
@@ -85,10 +63,10 @@ export default function AuthPage() {
                 <div className="p-8 md:p-14 flex flex-col justify-center bg-white dark:bg-slate-950">
                     <div className="mb-10 text-center md:text-left">
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
-                            {isLogin ? 'Sign In' : 'Join Platform'}
+                            Sign In
                         </h2>
                         <p className="text-slate-500 dark:text-slate-400">
-                            {isLogin ? 'Enter your credentials to continue.' : 'Create your student account below.'}
+                            Enter your credentials to continue.
                         </p>
                     </div>
 
@@ -99,23 +77,6 @@ export default function AuthPage() {
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {!isLogin && (
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold ml-1 text-slate-700 dark:text-slate-300">Full Name</label>
-                                <div className="relative group">
-                                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
-                                    <input
-                                        type="text"
-                                        required={!isLogin}
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-900 dark:text-white"
-                                        placeholder="John Doe"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
                         <div className="space-y-2">
                             <label className="text-sm font-semibold ml-1 text-slate-700 dark:text-slate-300">Email Address</label>
                             <div className="relative group">
@@ -134,7 +95,7 @@ export default function AuthPage() {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center ml-1">
                                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
-                                {isLogin && <button type="button" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Forgot?</button>}
+                                <button type="button" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Forgot?</button>
                             </div>
                             <div className="relative group">
                                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
@@ -157,24 +118,16 @@ export default function AuthPage() {
                             {loading ? (
                                 <Loader2 className="animate-spin" size={20} />
                             ) : (
-                                isLogin ? 'Sign In' : 'Create Account'
+                                "Sign In"
                             )}
                             {!loading && <ArrowRight size={20} />}
                         </button>
                     </form>
 
                     <div className="mt-10 text-center">
-                        <button
-                            type="button"
-                            onClick={toggleMode}
-                            className="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                        >
-                            {isLogin ? (
-                                <span>Don't have an account? <span className="text-indigo-600 dark:text-indigo-400 font-bold underline underline-offset-4 ml-1">Register</span></span>
-                            ) : (
-                                <span>Already have an account? <span className="text-indigo-600 dark:text-indigo-400 font-bold underline underline-offset-4 ml-1">Login</span></span>
-                            )}
-                        </button>
+                        <span className="text-slate-600 dark:text-slate-400 text-sm font-medium">
+                            Don't have an account? <Link to="/register" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-bold underline underline-offset-4 ml-1 transition-colors">Register</Link>
+                        </span>
                     </div>
                 </div>
             </div>

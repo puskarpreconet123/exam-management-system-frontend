@@ -13,6 +13,8 @@ export default function ExamsPage() {
 
     const [form, setForm] = useState({
         title: '',
+        board: 'General',
+        class: 'General',
         totalQuestions: 50,
         easy: 30,
         medium: 40,
@@ -27,12 +29,10 @@ export default function ExamsPage() {
         setLoading(true);
         setError('');
         try {
-            const [examsRes, subjectsRes] = await Promise.all([
-                api.get('/admin/exams'),
-                api.get('/admin/questions/summary').catch(() => ({ data: { data: [] } }))
+            const [examsRes] = await Promise.all([
+                api.get('/admin/exams')
             ]);
             setExams(examsRes.data.data || []);
-            setAvailableSubjects(subjectsRes.data?.data || []);
         } catch (err) {
             setError('Failed to load exams');
             showToast('Error fetching exams', 'error');
@@ -45,11 +45,23 @@ export default function ExamsPage() {
         loadExams();
     }, []);
 
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            try {
+                const res = await api.get(`/admin/questions/summary?board=${form.board}&class=${form.class}`);
+                setAvailableSubjects(res.data?.data || []);
+            } catch (e) {
+                setAvailableSubjects([]);
+            }
+        };
+        fetchSubjects();
+    }, [form.board, form.class]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm(prev => ({
             ...prev,
-            [name]: (name === 'title' || name === 'startTime' || name === 'endTime' || name === 'schedulingType')
+            [name]: (name === 'title' || name === 'startTime' || name === 'endTime' || name === 'schedulingType' || name === 'board' || name === 'class')
                 ? value
                 : Number(value)
         }));
@@ -107,6 +119,8 @@ export default function ExamsPage() {
         try {
             await api.post('/admin/exams', {
                 title: form.title,
+                board: form.board,
+                class: form.class,
                 totalQuestions: calculatedTotal,
                 difficultyDistribution: {
                     easy: form.easy,
@@ -122,6 +136,8 @@ export default function ExamsPage() {
             showToast('Exam created successfully', 'success');
             setForm({
                 title: '',
+                board: 'General',
+                class: 'General',
                 totalQuestions: 50,
                 easy: 30,
                 medium: 40,
@@ -196,6 +212,9 @@ export default function ExamsPage() {
                                                         )}
                                                     </div>
                                                     <div className="flex items-center gap-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-1">
+                                                        <span className="flex items-center gap-1 text-indigo-500">
+                                                            <span className="material-symbols-outlined text-[12px]">school</span> {exam.board} / {exam.class}
+                                                        </span>
                                                         <span className="flex items-center gap-1">
                                                             <span className="material-symbols-outlined text-sm">schedule</span> {exam.durationMinutes || exam.duration}m
                                                         </span>
@@ -266,6 +285,35 @@ export default function ExamsPage() {
                                 className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
                                 placeholder="e.g. Science Mid-term 2024"
                             />
+                        </div>
+
+                        {/* Board & Class */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Board</label>
+                                <select name="board" value={form.board} onChange={handleChange}
+                                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
+                                    <option value="General">General</option>
+                                    <option value="CBSE">CBSE</option>
+                                    <option value="ICSE">ICSE</option>
+                                    <option value="State Board">State Board</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Class</label>
+                                <select name="class" value={form.class} onChange={handleChange}
+                                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
+                                    <option value="General">General</option>
+                                    <option value="Class 5">Class 5</option>
+                                    <option value="Class 6">Class 6</option>
+                                    <option value="Class 7">Class 7</option>
+                                    <option value="Class 8">Class 8</option>
+                                    <option value="Class 9">Class 9</option>
+                                    <option value="Class 10">Class 10</option>
+                                    <option value="Class 11">Class 11</option>
+                                    <option value="Class 12">Class 12</option>
+                                </select>
+                            </div>
                         </div>
 
                         {/* Subjects + Duration */}

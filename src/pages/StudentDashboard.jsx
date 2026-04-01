@@ -144,6 +144,9 @@ if (result?.publishedAttempts?.length > 0) {
                             </div>
                         ) : activeExams.map((exam) => {
                             const isLive = !!exam.attemptId || (new Date() >= new Date(exam.startTime));
+                            const isDemo = Boolean(exam.title && exam.title.toLowerCase().startsWith("demo exam"));
+                            const isAuthorized = isDemo || user?.paymentStatus === 'completed';
+
                             return (
                                 <div key={exam._id} className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-md">
                                     <div className="flex items-center gap-4">
@@ -160,12 +163,22 @@ if (result?.publishedAttempts?.length > 0) {
                                     </div>
 
                                     {isLive ? (
-                                        <button
-                                            onClick={() => exam.attemptId ? navigate(`/exam/${exam.attemptId}`) : handleJoinLobby(exam._id)}
-                                            className="w-full md:w-auto px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all"
-                                        >
-                                            {exam.attemptId ? 'Resume' : 'Join Lobby'}
-                                        </button>
+                                        isAuthorized ? (
+                                            <button
+                                                onClick={() => exam.attemptId ? navigate(`/exam/${exam.attemptId}`) : handleJoinLobby(exam._id)}
+                                                className="w-full md:w-auto px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all"
+                                            >
+                                                {exam.attemptId ? 'Resume' : 'Join Lobby'}
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => showToast("You must complete payment to access full exams. Only demo exams are accessible.", "error")}
+                                                className="w-full md:w-auto px-8 py-3 bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20 rounded-xl font-bold cursor-not-allowed flex items-center justify-center gap-2"
+                                                title="Payment Required"
+                                            >
+                                                Locked <span className="material-symbols-outlined text-sm">lock</span>
+                                            </button>
+                                        )
                                     ) : (
                                         <button className="w-full md:w-auto px-8 py-3 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl font-bold cursor-not-allowed">
                                             Upcoming

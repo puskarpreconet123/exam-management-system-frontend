@@ -14,6 +14,9 @@ export default function QuestionsPage() {
     const [summaryLoading, setSummaryLoading] = useState(true);
     const [totalRecords, setTotalRecords] = useState(0);
 
+    const [filterBoard, setFilterBoard] = useState("General");
+    const [filterClass, setFilterClass] = useState("General");
+
     // Accordion state
     const [expandedSubject, setExpandedSubject] = useState(null);
     const [expandedDifficulty, setExpandedDifficulty] = useState(null);
@@ -26,6 +29,8 @@ export default function QuestionsPage() {
         text: "",
         subject: "",
         difficulty: "easy",
+        board: "General",
+        class: "General",
         options: [
             { ...emptyOption, label: "A" },
             { ...emptyOption, label: "B" },
@@ -41,7 +46,9 @@ export default function QuestionsPage() {
     const loadSummary = async () => {
         setSummaryLoading(true);
         try {
-            const { data } = await api.get('/admin/questions/summary');
+            const { data } = await api.get('/admin/questions/summary', {
+                params: { board: filterBoard, class: filterClass }
+            });
             setSummary(data.data || []);
             setTotalRecords(data.totalRecords || 0);
         } catch (err) {
@@ -51,7 +58,7 @@ export default function QuestionsPage() {
         }
     };
 
-    useEffect(() => { loadSummary(); }, []);
+    useEffect(() => { loadSummary(); }, [filterBoard, filterClass]);
 
     // Lazy-load questions for a specific subject+difficulty group
     const loadGroupQuestions = async (subject, difficulty, page = 1) => {
@@ -59,7 +66,7 @@ export default function QuestionsPage() {
         setGroupMeta(prev => ({ ...prev, [key]: { ...prev[key], loading: true, page } }));
         try {
             const { data } = await api.get('/admin/questions/by-group', {
-                params: { subject, difficulty, page, limit: 20 }
+                params: { subject, difficulty, page, limit: 20, board: filterBoard, class: filterClass }
             });
             setGroupQuestions(prev => ({ ...prev, [key]: data.data || [] }));
             setGroupMeta(prev => ({
@@ -114,7 +121,7 @@ export default function QuestionsPage() {
             await api.post('/admin/questions', singleForm);
             showToast('Question added to bank', 'success');
             setSingleForm({
-                text: "", subject: "", difficulty: "easy",
+                text: "", subject: "", difficulty: "easy", board: singleForm.board, class: singleForm.class,
                 options: [
                     { ...emptyOption, label: "A" }, { ...emptyOption, label: "B" },
                     { ...emptyOption, label: "C" }, { ...emptyOption, label: "D" },
@@ -170,18 +177,43 @@ export default function QuestionsPage() {
 
                 {/* ---- Left: Inventory Explorer ---- */}
                 <div className="lg:col-span-3 space-y-4">
-                    <div className="flex items-center justify-between px-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between px-1 gap-2">
                         <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">Inventory Explorer</h2>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <select
+                                value={filterBoard}
+                                onChange={(e) => setFilterBoard(e.target.value)}
+                                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-bold focus:border-indigo-500 outline-none"
+                            >
+                                <option value="General">General Board</option>
+                                <option value="CBSE">CBSE</option>
+                                <option value="ICSE">ICSE</option>
+                                <option value="State Board">State Board</option>
+                            </select>
+                            <select
+                                value={filterClass}
+                                onChange={(e) => setFilterClass(e.target.value)}
+                                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-bold focus:border-indigo-500 outline-none"
+                            >
+                                <option value="General">General Class</option>
+                                <option value="Class 5">Class 5</option>
+                                <option value="Class 6">Class 6</option>
+                                <option value="Class 7">Class 7</option>
+                                <option value="Class 8">Class 8</option>
+                                <option value="Class 9">Class 9</option>
+                                <option value="Class 10">Class 10</option>
+                                <option value="Class 11">Class 11</option>
+                                <option value="Class 12">Class 12</option>
+                            </select>
                             <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 px-3 py-1 rounded-full text-[10px] font-black uppercase shadow-sm">
                                 {totalRecords} Items
                             </span>
                             <button
                                 onClick={loadSummary}
                                 disabled={summaryLoading}
-                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all active:scale-90 disabled:opacity-60"
+                                className="p-2 hover:bg-slate-100 dark:bg-slate-800 rounded-xl transition-all disabled:opacity-60"
                             >
-                                <span className={`material-symbols-outlined text-indigo-600 text-lg ${summaryLoading ? 'animate-spin' : ''}`}>
+                                <span className={`material-symbols-outlined text-indigo-600 text-sm ${summaryLoading ? 'animate-spin' : ''}`}>
                                     {summaryLoading ? 'sync' : 'refresh'}
                                 </span>
                             </button>
@@ -342,6 +374,34 @@ export default function QuestionsPage() {
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1">
+                                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Board</label>
+                                            <select name="board" value={singleForm.board} onChange={handleSingleChange}
+                                                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
+                                                <option value="General">General</option>
+                                                <option value="CBSE">CBSE</option>
+                                                <option value="ICSE">ICSE</option>
+                                                <option value="State Board">State Board</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Class</label>
+                                            <select name="class" value={singleForm.class} onChange={handleSingleChange}
+                                                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
+                                                <option value="General">General</option>
+                                                <option value="Class 5">Class 5</option>
+                                                <option value="Class 6">Class 6</option>
+                                                <option value="Class 7">Class 7</option>
+                                                <option value="Class 8">Class 8</option>
+                                                <option value="Class 9">Class 9</option>
+                                                <option value="Class 10">Class 10</option>
+                                                <option value="Class 11">Class 11</option>
+                                                <option value="Class 12">Class 12</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
                                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Subject</label>
                                             <input name="subject" value={singleForm.subject} onChange={handleSingleChange} required
                                                 className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
@@ -398,7 +458,7 @@ export default function QuestionsPage() {
                                             An array of objects. Labels must match <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded font-bold">correctAnswer</code>.
                                         </p>
                                         <div className="mt-2 text-[10px] bg-white/50 dark:bg-black/20 p-2 rounded-lg font-mono text-slate-600 dark:text-slate-400">
-                                            {'{ "text": "...", "options": [{"label":"A","value":"..."}], "correctAnswer": "A", "difficulty": "easy", "subject": "Math" }'}
+                                            {'{ "text": "...", "options": [{"label":"A","value":"..."}], "correctAnswer": "A", "difficulty": "easy", "subject": "Math", "board": "CBSE", "class": "Class 10" }'}
                                         </div>
                                     </div>
                                     <textarea rows={10} value={bulkText} onChange={(e) => setBulkText(e.target.value)}
