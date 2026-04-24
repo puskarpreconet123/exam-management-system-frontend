@@ -6,6 +6,7 @@ import * as db from '../utils/indexedDB';
 import NetworkStatus from './NetworkStatus';
 import { useToast } from '../context/ToastContext';
 import { io } from 'socket.io-client';
+import { renderTextWithFractions } from '../utils/textFormatters';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
@@ -490,7 +491,7 @@ export default function ActiveExamInterface() {
 
                         <div className="prose dark:prose-invert max-w-none shrink-0 border-b border-slate-100 dark:border-slate-800 pb-4 lg:pb-6 mb-4 lg:mb-6">
                             <p className="text-lg lg:text-xl font-medium leading-relaxed dark:text-slate-100">
-                                {currentQuestion.text}
+                                {renderTextWithFractions(currentQuestion.text)}
                             </p>
                         </div>
 
@@ -517,7 +518,7 @@ export default function ActiveExamInterface() {
                                             value={opt.value}
                                         />
                                         <span className={`ml-3 lg:ml-4 text-sm lg:text-base font-medium block w-full ${isSelected ? 'text-primary font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
-                                            {opt.value}
+                                            {renderTextWithFractions(opt.value)}
                                         </span>
                                     </label>
                                 );

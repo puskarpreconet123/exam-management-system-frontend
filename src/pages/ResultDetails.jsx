@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import dayjs from 'dayjs';
+import { renderTextWithFractions } from '../utils/textFormatters';
 
 export default function ResultDetails() {
     const { attemptId } = useParams();
@@ -110,7 +111,7 @@ export default function ResultDetails() {
                                         {index + 1}
                                     </div>
                                     <h4 className="flex-1 text-slate-800 dark:text-white font-medium text-base md:text-lg pt-1 leading-relaxed">
-                                        {q.text}
+                                        {renderTextWithFractions(q.text)}
                                     </h4>
                                     <div className="shrink-0 pt-1">
                                         {isCorrect ? (
@@ -150,7 +151,7 @@ export default function ResultDetails() {
                                                 <div className={`mt-0.5 md:mt-0 size-6 shrink-0 rounded flex items-center justify-center text-xs font-bold mr-3 ${isActualCorrect ? 'bg-green-500 text-white shadow-sm shadow-green-500/20' : isSelected ? 'bg-red-500 text-white shadow-sm shadow-red-500/20' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
                                                     {opt.label}
                                                 </div>
-                                                <span className={`${textClass} leading-tight text-sm md:text-base pt-0.5 md:pt-0 pb-0.5 pr-2`}>{opt.value}</span>
+                                                <span className={`${textClass} leading-tight text-sm md:text-base pt-0.5 md:pt-0 pb-0.5 pr-2`}>{renderTextWithFractions(opt.value)}</span>
                                                 {icon && <div className="shrink-0 ml-auto pl-2 flex items-center">{icon}</div>}
                                             </div>
                                         );

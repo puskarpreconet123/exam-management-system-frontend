@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
+import { renderTextWithFractions } from '../../utils/textFormatters';
 
 const emptyOption = { label: "", value: "" };
 
@@ -293,15 +294,15 @@ export default function QuestionsPage() {
                                                                     <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
                                                                         {qs.map((q) => (
                                                                             <div key={q._id} className="px-5 py-4 hover:bg-white dark:hover:bg-slate-800/40 transition-colors">
-                                                                                <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 leading-relaxed mb-3">{q.text}</h4>
+                                                                                <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 leading-relaxed mb-3">{renderTextWithFractions(q.text)}</h4>
                                                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                                                                                     {q.options?.map(opt => (
                                                                                         <div key={opt.label} className={`flex items-start gap-2 text-xs font-medium p-1.5 rounded-lg ${opt.label === q.correctAnswer
-                                                                                                ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20'
-                                                                                                : 'text-slate-500'
+                                                                                            ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20'
+                                                                                            : 'text-slate-500'
                                                                                             }`}>
                                                                                             <span className="opacity-50 font-black shrink-0">{opt.label}.</span>
-                                                                                            <span className="break-words">{opt.value}</span>
+                                                                                            <span className="break-words">{renderTextWithFractions(opt.value)}</span>
                                                                                             {opt.label === q.correctAnswer && (
                                                                                                 <span className="material-symbols-outlined text-sm ml-auto text-emerald-500 shrink-0">check_circle</span>
                                                                                             )}
@@ -458,7 +459,7 @@ export default function QuestionsPage() {
                                             An array of objects. Labels must match <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded font-bold">correctAnswer</code>.
                                         </p>
                                         <div className="mt-2 text-[10px] bg-white/50 dark:bg-black/20 p-2 rounded-lg font-mono text-slate-600 dark:text-slate-400">
-                                            {'{ "text": "...", "options": [{"label":"A","value":"..."}], "correctAnswer": "A", "difficulty": "easy", "subject": "Math", "board": "CBSE", "class": "Class 10" }'}
+                                            {'[{ "text": "...", "options": [{"label":"A","value":"..."}], "correctAnswer": "A", "difficulty": "easy", "subject": "Math", "board": "CBSE", "class": "Class 10" }]'}
                                         </div>
                                     </div>
                                     <textarea rows={10} value={bulkText} onChange={(e) => setBulkText(e.target.value)}
