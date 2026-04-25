@@ -27,10 +27,12 @@ export default function ActiveExamInterface() {
     const [syncingBacklog, setSyncingBacklog] = useState(false);
     const [isNavOpen, setIsNavOpen] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [timeUp, setTimeUp] = useState(false);
 
     const timerRef = useRef(null);
     const violationPendingRef = useRef(null);
     const socketRef = useRef(null);
+    const answersRef = useRef({});
 
     useEffect(() => {
         if (!user) return;
@@ -235,7 +237,7 @@ export default function ActiveExamInterface() {
             setRemainingSeconds(prev => {
                 if (prev <= 1) {
                     clearInterval(timerRef.current);
-                    handleSubmit(true);
+                    setTimeUp(true);
                     return 0;
                 }
                 return prev - 1;
@@ -245,8 +247,19 @@ export default function ActiveExamInterface() {
         return () => clearInterval(timerRef.current);
     }, [loading]);
 
+    // When time is up, auto-submit after showing the modal for 3 seconds
+    useEffect(() => {
+        if (!timeUp) return;
+        const t = setTimeout(() => handleAutoSubmit(), 3000);
+        return () => clearTimeout(t);
+    }, [timeUp]);
+
     const handleSelectOption = (qId, optionObj) => {
         setAnswers(prev => ({ ...prev, [qId]: optionObj }));
+    };
+
+    const handleTitaInput = (qId, value) => {
+        setAnswers(prev => ({ ...prev, [qId]: value }));
     };
 
     const toggleFlag = () => {
@@ -268,6 +281,11 @@ export default function ActiveExamInterface() {
             return next;
         });
     };
+
+    // Keep answersRef current so auto-submit always sends the latest answers
+    useEffect(() => {
+        answersRef.current = answers;
+    }, [answers]);
 
     // Auto-save to IndexedDB and Debounced Sync to Backend
     useEffect(() => {
@@ -314,16 +332,36 @@ export default function ActiveExamInterface() {
 
     const confirmSubmission = () => {
         setShowConfirmModal(false);
-        handleSubmit(false, true);
+        handleSubmit(true);
     };
 
-    const handleSubmit = async (isAuto = false, forceSubmit = false) => {
-        if (!isAuto && !forceSubmit) {
+    const handleAutoSubmit = async () => {
+        try {
+            const answersArray = Object.keys(answersRef.current).map(qid => ({
+                questionId: qid,
+                selectedOption: answersRef.current[qid]
+            }));
+            try {
+                await api.post(`/exam/sync/${attemptId}`, { answers: answersArray });
+            } catch (syncErr) {
+                console.warn("Pre-submit sync failed, submitting anyway:", syncErr);
+            }
+            await api.post(`/exam/submit/${attemptId}`);
+            await db.clearExamData(attemptId);
+            navigate('/dashboard', { state: { autoSubmitted: true } });
+        } catch (err) {
+            console.error(err);
+            await db.clearExamData(attemptId);
+            navigate('/dashboard');
+        }
+    };
+
+    const handleSubmit = async (force = false) => {
+        if (!force) {
             setShowConfirmModal(true);
             return;
         }
         try {
-            // sync latest first
             const answersArray = Object.keys(answers).map(qid => ({
                 questionId: qid,
                 selectedOption: answers[qid]
@@ -333,20 +371,13 @@ export default function ActiveExamInterface() {
             } catch (syncErr) {
                 console.warn("Pre-submit sync failed, submitting anyway:", syncErr);
             }
-
-            // then submit
             const res = await api.post(`/exam/submit/${attemptId}`);
             showToast(res.data.message || "Exam submitted successfully. Your result is pending review.", "success", 6000);
             await db.clearExamData(attemptId);
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
-            if (isAuto) {
-                await db.clearExamData(attemptId);
-                navigate('/dashboard');
-            } else {
-                showToast("Error submitting exam", "error");
-            }
+            showToast("Error submitting exam", "error");
         }
     };
 
@@ -453,7 +484,7 @@ export default function ActiveExamInterface() {
                                 <div className={`w-2 h-2 rounded-full ${saving || syncingBacklog ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
                             </div>
 
-                            <button onClick={() => handleSubmit(false)} className="bg-primary text-white px-2 py-1 sm:px-4 sm:py-2 lg:px-6 rounded-md lg:rounded-lg font-bold text-[11px] sm:text-xs lg:text-sm hover:bg-primary/90 transition-all shadow-sm border-none cursor-pointer whitespace-nowrap">
+                            <button onClick={() => handleSubmit()} className="bg-primary text-white px-2 py-1 sm:px-4 sm:py-2 lg:px-6 rounded-md lg:rounded-lg font-bold text-[11px] sm:text-xs lg:text-sm hover:bg-primary/90 transition-all shadow-sm border-none cursor-pointer whitespace-nowrap">
                                 Submit
                             </button>
                         </div>
@@ -467,9 +498,16 @@ export default function ActiveExamInterface() {
                 <div className="flex-1 lg:flex-3 flex flex-col gap-3 lg:gap-4 overflow-hidden min-h-0">
                     <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 lg:p-8 flex flex-col overflow-y-auto custom-scrollbar">
                         <div className="flex flex-wrap items-center justify-between mb-4 lg:mb-8 shrink-0 gap-3">
-                            <span className="bg-primary/10 text-primary px-3 lg:px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold">
-                                Question {currentIdx + 1} of {questions.length}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className="bg-primary/10 text-primary px-3 lg:px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold">
+                                    Question {currentIdx + 1} of {questions.length}
+                                </span>
+                                {currentQuestion.type === 'tita' && (
+                                    <span className="px-2.5 py-1 rounded-full text-[10px] lg:text-xs font-black uppercase tracking-widest bg-violet-100 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20">
+                                        TITA
+                                    </span>
+                                )}
+                            </div>
                             <div className="flex items-center gap-2 lg:gap-4 flex-wrap">
                                 <label className="flex items-center gap-2 cursor-pointer group">
                                     <span className="text-xs lg:text-sm font-medium text-slate-500 group-hover:text-amber-500 transition-colors">Review</span>
@@ -493,37 +531,76 @@ export default function ActiveExamInterface() {
                             <p className="text-lg lg:text-xl font-medium leading-relaxed dark:text-slate-100">
                                 {renderTextWithFractions(currentQuestion.text)}
                             </p>
+
+                            {/* Question image */}
+                            {currentQuestion.imageUrl && (
+                                <div className="mt-4 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 not-prose">
+                                    <img
+                                        src={currentQuestion.imageUrl}
+                                        alt="Question illustration"
+                                        className="w-full max-h-72 object-contain p-2"
+                                        loading="lazy"
+                                    />
+                                </div>
+                            )}
                         </div>
 
-                        <div className="space-y-3 lg:space-y-4 flex-1">
-                            {currentQuestion.options.map(opt => {
-                                const currentSelection = answers[currentQuestion._id];
-                                // Check both object type and direct value, use loose equality for ID safety
-                                const isSelected = (currentSelection?._id !== undefined ? currentSelection.label : currentSelection) == opt.label;
-                                console.log(currentSelection)
-                                return (
-                                    <label
-                                        key={opt.value}
-                                        className={`flex items-start p-3 lg:p-4 border rounded-xl cursor-pointer transition-all group ${isSelected
-                                            ? 'border-primary/40 bg-primary/5 dark:border-primary/40 ring-1 ring-primary/20'
-                                            : 'border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:bg-primary/5'
-                                            }`}
-                                    >
-                                        <input
-                                            checked={isSelected}
-                                            onChange={() => handleSelectOption(currentQuestion._id, opt)}
-                                            className="w-4 h-4 mt-0.5 lg:mt-0 md:w-5 md:h-5 text-primary border-slate-300 focus:ring-primary dark:bg-slate-800 dark:border-slate-700 accent-primary cursor-pointer shrink-0"
-                                            name={`answer-${currentQuestion._id}`}
-                                            type="radio"
-                                            value={opt.value}
-                                        />
-                                        <span className={`ml-3 lg:ml-4 text-sm lg:text-base font-medium block w-full ${isSelected ? 'text-primary font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
-                                            {renderTextWithFractions(opt.value)}
-                                        </span>
-                                    </label>
-                                );
-                            })}
-                        </div>
+                        {/* MCQ options */}
+                        {currentQuestion.type !== 'tita' ? (
+                            <div className="space-y-3 lg:space-y-4 flex-1">
+                                {currentQuestion.options.map(opt => {
+                                    const currentSelection = answers[currentQuestion._id];
+                                    const isSelected = (currentSelection?._id !== undefined ? currentSelection.label : currentSelection) == opt.label;
+                                    return (
+                                        <label
+                                            key={opt.value}
+                                            className={`flex items-start p-3 lg:p-4 border rounded-xl cursor-pointer transition-all group ${isSelected
+                                                ? 'border-primary/40 bg-primary/5 dark:border-primary/40 ring-1 ring-primary/20'
+                                                : 'border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:bg-primary/5'
+                                                }`}
+                                        >
+                                            <input
+                                                checked={isSelected}
+                                                onChange={() => handleSelectOption(currentQuestion._id, opt)}
+                                                className="w-4 h-4 mt-0.5 lg:mt-0 md:w-5 md:h-5 text-primary border-slate-300 focus:ring-primary dark:bg-slate-800 dark:border-slate-700 accent-primary cursor-pointer shrink-0"
+                                                name={`answer-${currentQuestion._id}`}
+                                                type="radio"
+                                                value={opt.value}
+                                            />
+                                            <span className={`ml-3 lg:ml-4 text-sm lg:text-base font-medium block w-full ${isSelected ? 'text-primary font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                {renderTextWithFractions(opt.value)}
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            /* TITA input */
+                            <div className="flex-1 flex flex-col gap-3">
+                                <div className="p-4 rounded-xl bg-violet-50 dark:bg-violet-500/5 border border-violet-200 dark:border-violet-500/20">
+                                    <p className="text-xs font-black uppercase tracking-widest text-violet-500 dark:text-violet-400 flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[16px]">keyboard</span>
+                                        Type In The Answer
+                                    </p>
+                                    <p className="text-xs text-violet-600/70 dark:text-violet-400/60 mt-1">
+                                        Type your answer exactly. Spelling and case may matter.
+                                    </p>
+                                </div>
+                                <input
+                                    type="text"
+                                    value={answers[currentQuestion._id] || ''}
+                                    onChange={(e) => handleTitaInput(currentQuestion._id, e.target.value)}
+                                    placeholder="Type your answer here..."
+                                    autoComplete="off"
+                                    className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-4 text-base lg:text-lg font-bold text-slate-900 dark:text-white placeholder:text-slate-400 placeholder:font-normal focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all outline-none"
+                                />
+                                {answers[currentQuestion._id] && (
+                                    <p className="text-xs text-slate-400 font-medium ml-1">
+                                        Answer saved · {String(answers[currentQuestion._id]).length} characters
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Action Buttons */}
@@ -627,9 +704,13 @@ export default function ActiveExamInterface() {
                                                             setIsNavOpen(false);
                                                         }}
                                                         className={btnClass}
+                                                        title={q.type === 'tita' ? `Q${idx + 1} · TITA` : `Q${idx + 1}`}
                                                     >
                                                         {isFlagged && isAnswered && (
                                                             <span className="absolute -top-1 -right-1 text-[8px] text-amber-300 drop-shadow-md">★</span>
+                                                        )}
+                                                        {q.type === 'tita' && (
+                                                            <span className="absolute -top-1 -left-1 text-[7px] font-black bg-violet-500 text-white px-0.5 rounded leading-none">T</span>
                                                         )}
                                                         {idx + 1}
                                                     </button>
@@ -654,10 +735,37 @@ export default function ActiveExamInterface() {
                                 <div className="w-3 h-3 rounded-sm bg-slate-200 dark:bg-slate-700"></div>
                                 <span className="text-slate-600 dark:text-slate-400">Unanswered ({questions.length - Object.keys(answers).length})</span>
                             </div>
+                            {questions.some(q => q.type === 'tita') && (
+                                <div className="flex items-center gap-2 text-xs font-medium pt-1 border-t border-slate-200 dark:border-slate-700">
+                                    <span className="text-[9px] font-black bg-violet-500 text-white px-1 rounded leading-tight">T</span>
+                                    <span className="text-slate-600 dark:text-slate-400">TITA — type your answer</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </main>
+
+            {/* Time's Up Modal */}
+            {timeUp && (
+                <div className="fixed inset-0 z-70 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm px-4">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-center mb-5">
+                            <div className="p-4 bg-red-100 dark:bg-red-500/20 rounded-full">
+                                <span className="material-symbols-outlined text-4xl text-red-500 dark:text-red-400">timer_off</span>
+                            </div>
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Time's Up!</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                            Your exam time has expired. Your answers are being submitted automatically.
+                        </p>
+                        <div className="flex items-center justify-center gap-2 text-xs font-bold text-indigo-500">
+                            <div className="animate-spin size-4 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+                            Submitting your attempt...
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Confirmation Modal */}
             {showConfirmModal && (

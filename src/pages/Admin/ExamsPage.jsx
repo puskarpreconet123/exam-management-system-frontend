@@ -63,7 +63,7 @@ export default function ExamsPage() {
             ...prev,
             [name]: (name === 'title' || name === 'startTime' || name === 'endTime' || name === 'schedulingType' || name === 'board' || name === 'class')
                 ? value
-                : Number(value)
+                : (value === '' ? '' : Number(value))
         }));
     };
 
@@ -86,7 +86,11 @@ export default function ExamsPage() {
     const handleCreate = async (e) => {
         e.preventDefault();
 
-        if (form.easy + form.medium + form.hard !== 100) {
+        const easy = Number(form.easy) || 0;
+        const medium = Number(form.medium) || 0;
+        const hard = Number(form.hard) || 0;
+
+        if (easy + medium + hard !== 100) {
             showToast('Difficulty distribution must sum to 100%', 'error');
             return;
         }
@@ -123,12 +127,12 @@ export default function ExamsPage() {
                 class: form.class,
                 totalQuestions: calculatedTotal,
                 difficultyDistribution: {
-                    easy: form.easy,
-                    medium: form.medium,
-                    hard: form.hard
+                    easy: Number(form.easy) || 0,
+                    medium: Number(form.medium) || 0,
+                    hard: Number(form.hard) || 0
                 },
                 subjects: subjectsPayload,
-                durationMinutes: form.durationMinutes,
+                durationMinutes: Number(form.durationMinutes) || 0,
                 schedulingType: form.schedulingType,
                 startTime: form.startTime,
                 endTime: form.schedulingType === 'range' ? form.endTime : undefined,
@@ -323,8 +327,10 @@ export default function ExamsPage() {
                                 <input
                                     type="number"
                                     name="durationMinutes"
+                                    min={1}
                                     value={form.durationMinutes}
                                     onChange={handleChange}
+                                    required
                                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
                                 />
                             </div>
@@ -356,6 +362,8 @@ export default function ExamsPage() {
                                         type="number"
                                         placeholder="count"
                                         value={s.count}
+                                        min={1}
+                                        required
                                         onChange={(e) => handleSubjectChange(idx, 'count', e.target.value)}
                                         className="w-24 shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
                                     />
@@ -490,6 +498,9 @@ const DifficultyInput = ({ label, name, value, onChange, color }) => (
             type="number"
             name={name}
             value={value}
+            min={0}
+            max={100}
+            required
             onChange={onChange}
             className={`w-full text-center rounded-xl border-2 ${color} bg-white dark:bg-slate-800 py-2 text-xs font-black focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all`}
         />

@@ -11,6 +11,9 @@ export default function EvaluationPage() {
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState(null);
 
+    const [localOverrides, setLocalOverrides] = useState({});
+    const [overrideSaving, setOverrideSaving] = useState(false);
+
     useEffect(() => {
         const fetchExams = async () => {
             try {
@@ -61,6 +64,7 @@ export default function EvaluationPage() {
             return;
         }
         setLoading(true);
+        setLocalOverrides({});
         try {
             const { data } = await api.get(`/admin/exams/attempt-response/${attemptId}`);
             setReviewAttempt(data.data);
@@ -68,6 +72,50 @@ export default function EvaluationPage() {
             showToast('Failed to load response', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+
+
+    const handleSaveOverrides = async () => {
+        if (Object.keys(localOverrides).length === 0) return;
+        setOverrideSaving(true);
+        try {
+            const overridesArray = Object.entries(localOverrides).map(([questionId, isCorrect]) => ({
+                questionId,
+                isCorrect,
+            }));
+            const { data } = await api.patch(
+                `/admin/exams/override-answers/${reviewAttempt.attempt._id}`,
+                { overrides: overridesArray }
+            );
+            showToast('Overrides saved', 'success');
+            // Reflect new score everywhere
+            setReviewAttempt(prev => ({
+                ...prev,
+                attempt: { ...prev.attempt, score: data.score },
+                answers: prev.answers.map(ans => {
+                    const qId = ans.questionId?.toString?.() ?? ans.questionId;
+                    if (qId in localOverrides) {
+                        const val = localOverrides[qId];
+                        const autoCorrect = ans.selectedLabel === ans.correctLabel;
+                        return {
+                            ...ans,
+                            isCorrect: val === null ? autoCorrect : val,
+                            isOverridden: val !== null,
+                        };
+                    }
+                    return ans;
+                }),
+            }));
+            setAttempts(prev => prev.map(att =>
+                att._id === reviewAttempt.attempt._id ? { ...att, score: data.score } : att
+            ));
+            setLocalOverrides({});
+        } catch {
+            showToast('Failed to save overrides', 'error');
+        } finally {
+            setOverrideSaving(false);
         }
     };
 
@@ -316,72 +364,160 @@ export default function EvaluationPage() {
                                     </button>
                                 </div>
 
-                                {/* Score Summary Bar */}
-                                {reviewAttempt.attempt?.score !== null && reviewAttempt.attempt?.score !== undefined && (
-                                    <div className="px-5 py-3 bg-violet-50 dark:bg-violet-500/10 border-b border-violet-100 dark:border-violet-500/20 flex items-center justify-between">
-                                        <span className="text-xs font-semibold text-violet-600 dark:text-violet-400">Final Score</span>
-                                        <span className="text-lg font-black text-violet-700 dark:text-violet-300">
-                                            {reviewAttempt.attempt.score}
-                                        </span>
-                                    </div>
-                                )}
+                                {/* Score Summary Bar - read-only */}
+                                <div className="px-5 py-3 bg-violet-50 dark:bg-violet-500/10 border-b border-violet-100 dark:border-violet-500/20 flex items-center justify-between gap-3">
+                                    <span className="text-xs font-semibold text-violet-600 dark:text-violet-400 shrink-0">Final Score</span>
+                                    <span className="text-lg font-black text-violet-700 dark:text-violet-300">
+                                        {reviewAttempt.attempt?.score !== null && reviewAttempt.attempt?.score !== undefined
+                                            ? reviewAttempt.attempt.score
+                                            : <span className="text-sm font-medium text-slate-400 italic">Not scored</span>
+                                        }
+                                    </span>
+                                </div>
 
                                 {/* Answers */}
-                                <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto scrollbar-thin">
-                                    {reviewAttempt.answers?.length === 0 && (
-                                        <div className="py-12 text-center text-sm text-slate-400">No answers recorded.</div>
-                                    )}
-                                    {reviewAttempt.answers?.map((ans, idx) => (
-                                        <div
-                                            key={idx}
-                                            className={`rounded-xl border p-4 transition-all ${ans.isCorrect
-                                                ? 'bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-200 dark:border-emerald-500/20'
-                                                : 'bg-rose-50/50 dark:bg-rose-500/5 border-rose-200 dark:border-rose-500/15'
-                                                }`}
-                                        >
-                                            {/* Question */}
-                                            <div className="flex items-start gap-2 mb-3">
-                                                <span className="text-[10px] font-black text-violet-500 mt-0.5 shrink-0 uppercase">Q{idx + 1}</span>
-                                                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed flex-1">
-                                                    {ans.questionText}
-                                                </p>
-                                                <span className={`material-symbols-outlined text-[18px] shrink-0 ${ans.isCorrect ? 'text-emerald-500' : 'text-rose-400'}`}>
-                                                    {ans.isCorrect ? 'check_circle' : 'cancel'}
-                                                </span>
-                                            </div>
-
-                                            {/* Answer comparison */}
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="space-y-1">
-                                                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-1 uppercase tracking-wider">Student's Response</p>
-                                                    <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-bold border ${ans.isCorrect
-                                                        ? 'bg-emerald-50/50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20'
-                                                        : 'bg-rose-50/50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300 border-rose-500/20'
-                                                        }`}>
-                                                        {ans.selectedLabel && (
-                                                            <span className={`w-6 h-6 min-w-6 min-h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0 ${ans.isCorrect ? 'bg-emerald-500' : 'bg-rose-500'}`}>
-                                                                {ans.selectedLabel}
-                                                            </span>
-                                                        )}
-                                                        <span className="truncate leading-tight">
-                                                            {ans.selectedOption || <em className="opacity-50 font-normal">No Response</em>}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-1 uppercase tracking-wider">Correct Answer</p>
-                                                    <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-900 dark:text-violet-200 border border-violet-500/20 shadow-sm">
-                                                        {ans.correctLabel && (
-                                                            <span className="w-6 h-6 min-w-6 min-h-6 rounded-full flex items-center justify-center text-[10px] font-black bg-violet-500 text-white shrink-0">
-                                                                {ans.correctLabel}
-                                                            </span>
-                                                        )}
-                                                        <span className="truncate leading-tight">{ans.correctOption}</span>
-                                                    </div>
-                                                </div>
+                                <div className="flex flex-col max-h-[70vh] overflow-hidden">
+                                    {/* Save bar — shown only when there are pending overrides */}
+                                    {Object.keys(localOverrides).length > 0 && (
+                                        <div className="px-4 py-2.5 bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/20 flex items-center justify-between gap-2 shrink-0">
+                                            <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                                                <span className="material-symbols-outlined text-[14px]">edit_note</span>
+                                                {Object.keys(localOverrides).length} unsaved change{Object.keys(localOverrides).length > 1 ? 's' : ''}
+                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setLocalOverrides({})}
+                                                    className="text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                                                >
+                                                    Discard
+                                                </button>
+                                                <button
+                                                    onClick={handleSaveOverrides}
+                                                    disabled={overrideSaving}
+                                                    className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black rounded-lg transition-colors disabled:opacity-50"
+                                                >
+                                                    <span className={`material-symbols-outlined text-[14px] ${overrideSaving ? 'animate-spin' : ''}`}>
+                                                        {overrideSaving ? 'sync' : 'save'}
+                                                    </span>
+                                                    Save Changes
+                                                </button>
                                             </div>
                                         </div>
-                                    ))}
+                                    )}
+
+                                    <div className="p-4 space-y-3 overflow-y-auto scrollbar-thin flex-1">
+                                        {reviewAttempt.answers?.length === 0 && (
+                                            <div className="py-12 text-center text-sm text-slate-400">No answers recorded.</div>
+                                        )}
+                                        {reviewAttempt.answers?.map((ans, idx) => {
+                                            const qId = ans.questionId?.toString?.() ?? ans.questionId;
+                                            const isPending = qId in localOverrides;
+                                            const pendingValue = localOverrides[qId]; // true | false | null (reset)
+                                            const isPendingReset = isPending && pendingValue === null;
+
+                                            // Auto value derived from the answer data (no override applied)
+                                            const autoCorrect = ans.selectedLabel === ans.correctLabel;
+                                            // Effective value used for UI preview
+                                            const effectiveCorrect = isPending
+                                                ? (isPendingReset ? autoCorrect : pendingValue)
+                                                : ans.isCorrect;
+
+                                            // Show reset button only when there is an active (non-null) override
+                                            const hasActiveOverride = (isPending && !isPendingReset) || (!isPending && ans.isOverridden);
+                                            // Show "Manually overridden" badge only for saved override with no pending change
+                                            const showSavedBadge = ans.isOverridden && !isPending;
+
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className={`rounded-xl border p-4 transition-all ${effectiveCorrect
+                                                        ? 'bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-200 dark:border-emerald-500/20'
+                                                        : 'bg-rose-50/50 dark:bg-rose-500/5 border-rose-200 dark:border-rose-500/15'
+                                                        }`}
+                                                >
+                                                    {/* Question row */}
+                                                    <div className="flex items-start gap-2 mb-3">
+                                                        <span className="text-[10px] font-black text-violet-500 mt-0.5 shrink-0 uppercase">Q{idx + 1}</span>
+                                                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed flex-1">
+                                                            {ans.questionText}
+                                                        </p>
+
+                                                        {/* Override toggle buttons */}
+                                                        <div className="flex items-center gap-1 shrink-0">
+                                                            {hasActiveOverride && (
+                                                                <button
+                                                                    onClick={() => setLocalOverrides(prev => ({ ...prev, [qId]: null }))}
+                                                                    title="Reset to auto-evaluated result"
+                                                                    className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[14px]">restart_alt</span>
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => setLocalOverrides(prev => ({ ...prev, [qId]: true }))}
+                                                                title="Mark correct"
+                                                                className={`p-1.5 rounded-lg transition-all ${isPending && !isPendingReset && pendingValue === true
+                                                                    ? 'bg-emerald-500 text-white shadow-sm'
+                                                                    : 'text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600'
+                                                                    }`}
+                                                            >
+                                                                <span className="material-symbols-outlined text-[16px]">check</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setLocalOverrides(prev => ({ ...prev, [qId]: false }))}
+                                                                title="Mark wrong"
+                                                                className={`p-1.5 rounded-lg transition-all ${isPending && !isPendingReset && pendingValue === false
+                                                                    ? 'bg-rose-500 text-white shadow-sm'
+                                                                    : 'text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600'
+                                                                    }`}
+                                                            >
+                                                                <span className="material-symbols-outlined text-[16px]">close</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Saved override badge */}
+                                                    {showSavedBadge && (
+                                                        <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[12px]">edit</span>
+                                                            Manually overridden
+                                                        </p>
+                                                    )}
+
+                                                    {/* Answer comparison */}
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-1 uppercase tracking-wider">Student's Response</p>
+                                                            <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-bold border ${effectiveCorrect
+                                                                ? 'bg-emerald-50/50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20'
+                                                                : 'bg-rose-50/50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300 border-rose-500/20'
+                                                                }`}>
+                                                                {ans.selectedLabel && /^[A-Z]$/.test(ans.selectedLabel) && (
+                                                                    <span className={`w-6 h-6 min-w-6 min-h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0 ${effectiveCorrect ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+                                                                        {ans.selectedLabel}
+                                                                    </span>
+                                                                )}
+                                                                <span className="truncate leading-tight">
+                                                                    {ans.selectedOption || <em className="opacity-50 font-normal">No Response</em>}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-1 uppercase tracking-wider">Correct Answer</p>
+                                                            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-900 dark:text-violet-200 border border-violet-500/20 shadow-sm">
+                                                                {ans.correctLabel && /^[A-Z]$/.test(ans.correctLabel) && (
+                                                                    <span className="w-6 h-6 min-w-6 min-h-6 rounded-full flex items-center justify-center text-[10px] font-black bg-violet-500 text-white shrink-0">
+                                                                        {ans.correctLabel}
+                                                                    </span>
+                                                                )}
+                                                                <span className="truncate leading-tight">{ans.correctOption}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         </div>
