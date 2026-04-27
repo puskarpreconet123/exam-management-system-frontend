@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User, ArrowRight, ShieldCheck, Phone, CheckCircle, Navigation, MapPin, Map, CreditCard, Hash, Briefcase, GraduationCap, Loader2 } from 'lucide-react';
 import api from '../../utils/api';
+import { useRecaptcha } from '../../hooks/useRecaptcha';
 import { indiaStatesAndDistricts } from '../../utils/indiaStates';
 import { useToast } from '../../context/ToastContext';
 
 export default function Register() {
     const navigate = useNavigate();
     const { showToast } = useToast();
+    const { executeRecaptcha } = useRecaptcha();
 
     const [searchParams] = useSearchParams();
 
@@ -106,7 +108,8 @@ export default function Register() {
 
         setLoading(true);
         try {
-            const res = await api.post('/auth/register', formData);
+            const captchaToken = await executeRecaptcha('register');
+            const res = await api.post('/auth/register', { ...formData, captchaToken });
             alert("Account created successfully! Please sign in.");
             navigate('/login');
         } catch (err) {

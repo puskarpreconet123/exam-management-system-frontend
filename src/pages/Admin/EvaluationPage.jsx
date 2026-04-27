@@ -438,9 +438,21 @@ export default function EvaluationPage() {
                                                     {/* Question row */}
                                                     <div className="flex items-start gap-2 mb-3">
                                                         <span className="text-[10px] font-black text-violet-500 mt-0.5 shrink-0 uppercase">Q{idx + 1}</span>
-                                                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed flex-1">
-                                                            {ans.questionText}
-                                                        </p>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
+                                                                {ans.questionText}
+                                                            </p>
+                                                            {ans.questionImageUrl && (
+                                                                <div className="mt-2 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                                                                    <img
+                                                                        src={ans.questionImageUrl}
+                                                                        alt="Question illustration"
+                                                                        className="w-full max-h-48 object-contain p-1.5"
+                                                                        loading="lazy"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
 
                                                         {/* Override toggle buttons */}
                                                         <div className="flex items-center gap-1 shrink-0">

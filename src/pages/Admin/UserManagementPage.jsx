@@ -97,6 +97,7 @@ export default function UserManagementPage() {
     };
 
     return (
+        <>
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -222,6 +223,8 @@ export default function UserManagementPage() {
                 )}
             </div>
 
+        </div>
+
             {/* Details Modal */}
             {selectedUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -242,10 +245,10 @@ export default function UserManagementPage() {
                             <div className="flex items-center gap-2">
                                 <button 
                                     onClick={() => isEditMode ? setIsEditMode(false) : setIsEditMode(true)}
-                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1 ${isEditMode ? 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/20'}`}
+                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-1 ${isEditMode ? 'bg-slate-200 text-slate-700 hover:bg-slate-300  dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-indigo-500/20' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/20'}`}
                                 >
-                                    <span className="material-symbols-outlined text-[18px]">{isEditMode ? "close" : "edit"}</span>
-                                    {isEditMode ? "Cancel" : "Edit"}
+                                    <span className="material-symbols-outlined text-[18px]">{isEditMode ? "chevron_backward" : "edit"}</span>
+                                    {isEditMode ? "Back" : "Edit"}
                                 </button>
                                 <button onClick={() => setSelectedUser(null)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                                     <span className="material-symbols-outlined">close</span>
@@ -376,7 +379,7 @@ export default function UserManagementPage() {
                 .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
                 .dark .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; }
             `}</style>
-        </div>
+        </>
     );
 }
 

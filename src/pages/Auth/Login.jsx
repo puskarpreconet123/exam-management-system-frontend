@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAuth } from '../../components/AuthContext';
+import { useRecaptcha } from '../../hooks/useRecaptcha';
 
 export default function Login() {
     // Logic States
@@ -12,6 +13,7 @@ export default function Login() {
 
     const { login } = useAuth();
     const navigate = useNavigate();
+    const { executeRecaptcha } = useRecaptcha();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,15 +21,19 @@ export default function Login() {
         setLoading(true);
 
         try {
-            // Login Logic
-            const response = await login(email, password);
+            const captchaToken = await executeRecaptcha('login');
+            const response = await login(email, password, captchaToken);
             if (response.user.role === 'admin') {
                 navigate('/admin/dashboard');
             } else {
                 navigate('/dashboard');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Authentication failed. Please try again.');
+            if (err.message?.includes('reCAPTCHA')) {
+                setError('Security check failed. Please refresh the page and try again.');
+            } else {
+                setError(err.response?.data?.message || 'Authentication failed. Please try again.');
+            }
         } finally {
             setLoading(false);
         }

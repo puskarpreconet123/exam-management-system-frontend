@@ -130,6 +130,16 @@ export default function ResultDetails() {
                                         <h4 className="text-slate-800 dark:text-white font-medium text-base md:text-lg pt-1 leading-relaxed">
                                             {renderTextWithFractions(q.text)}
                                         </h4>
+                                        {q.imageUrl && (
+                                            <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                                                <img
+                                                    src={q.imageUrl}
+                                                    alt="Question illustration"
+                                                    className="w-full max-h-72 object-contain p-2"
+                                                    loading="lazy"
+                                                />
+                                            </div>
+                                        )}
                                         {/* Admin override badge */}
                                         {q.isOverridden && (
                                             <span className={`inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide ${

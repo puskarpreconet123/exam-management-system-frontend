@@ -4,7 +4,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import ActiveExamInterface from './components/ActiveExamInterface';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
-import { ThemeProvider, ThemeToggle } from './components/ThemeContext';
+import { ThemeProvider } from './components/ThemeContext';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import MyResults from './pages/MyResults';
 import ResultDetails from './pages/ResultDetails';
@@ -111,7 +111,6 @@ function App() {
           </AuthProvider>
         </ToastProvider>
       </BrowserRouter>
-      <ThemeToggle />
     </ThemeProvider>
   );
 }

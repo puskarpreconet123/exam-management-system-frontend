@@ -104,6 +104,7 @@ export default function AdminLayout() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <ThemeToggle />
                         <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors relative">
                             <span className="material-symbols-outlined">notifications</span>
                             <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
@@ -111,7 +112,7 @@ export default function AdminLayout() {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto">
+                <main className="flex-1 overflow-y-auto custom-scrollbar">
                     <Outlet />
                 </main>
             </div>

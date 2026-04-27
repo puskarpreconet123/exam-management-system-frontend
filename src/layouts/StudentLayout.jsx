@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
+import { ThemeToggle } from '../components/ThemeContext';
 
 export default function StudentLayout() {
     const { user, logout } = useAuth();
@@ -104,10 +105,11 @@ export default function StudentLayout() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-100 dark:border-emerald-500/20">
+                        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-100 dark:border-emerald-500/20">
                             <span className="size-2 bg-emerald-500 rounded-full animate-pulse"></span>
                             <span className="text-[10px] font-black uppercase tracking-widest">Live</span>
                         </div>
+                        <ThemeToggle />
                         <button className="p-2 text-slate-400 hover:text-blue-600 transition-colors relative">
                             <span className="material-symbols-outlined">notifications</span>
                             <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
@@ -115,7 +117,7 @@ export default function StudentLayout() {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto">
+                <main className="flex-1 overflow-y-auto custom-scrollbar">
                     <Outlet />
                 </main>
             </div>
