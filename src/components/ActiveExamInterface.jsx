@@ -507,6 +507,11 @@ export default function ActiveExamInterface() {
                                         TITA
                                     </span>
                                 )}
+                                {currentQuestion.type === 'mcq_image' && (
+                                    <span className="px-2.5 py-1 rounded-full text-[10px] lg:text-xs font-black uppercase tracking-widest bg-sky-100 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/20">
+                                        Image MCQ
+                                    </span>
+                                )}
                             </div>
                             <div className="flex items-center gap-2 lg:gap-4 flex-wrap">
                                 <label className="flex items-center gap-2 cursor-pointer group">
@@ -546,7 +551,49 @@ export default function ActiveExamInterface() {
                         </div>
 
                         {/* MCQ options */}
-                        {currentQuestion.type !== 'tita' ? (
+                        {currentQuestion.type === 'mcq_image' ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 flex-1">
+                                {currentQuestion.options.map(opt => {
+                                    const currentSelection = answers[currentQuestion._id];
+                                    const isSelected = (currentSelection?._id !== undefined ? currentSelection.label : currentSelection) == opt.label;
+                                    return (
+                                        <label
+                                            key={opt.label}
+                                            className={`relative flex flex-col p-3 border rounded-xl cursor-pointer transition-all ${isSelected
+                                                ? 'border-primary/60 bg-primary/5 ring-2 ring-primary/30'
+                                                : 'border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:bg-primary/5'
+                                                }`}
+                                        >
+                                            <input
+                                                checked={isSelected}
+                                                onChange={() => handleSelectOption(currentQuestion._id, opt)}
+                                                className="sr-only"
+                                                name={`answer-${currentQuestion._id}`}
+                                                type="radio"
+                                                value={opt.label}
+                                            />
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className={`size-7 rounded-lg flex items-center justify-center text-xs font-black ${isSelected ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'}`}>
+                                                    {opt.label}
+                                                </span>
+                                                {isSelected && (
+                                                    <span className="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+                                                )}
+                                            </div>
+                                            <div className="rounded-lg overflow-hidden bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                                                <img
+                                                    src={opt.value}
+                                                    alt={`Option ${opt.label}`}
+                                                    className="w-full max-h-48 object-contain p-1"
+                                                    loading="lazy"
+                                                    draggable={false}
+                                                />
+                                            </div>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        ) : currentQuestion.type !== 'tita' ? (
                             <div className="space-y-3 lg:space-y-4 flex-1">
                                 {currentQuestion.options.map(opt => {
                                     const currentSelection = answers[currentQuestion._id];

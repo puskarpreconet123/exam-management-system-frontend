@@ -101,7 +101,8 @@ export default function ResultDetails() {
                         // isCorrect comes from the API — already applies admin overrides
                         const isCorrect = q.isCorrect;
                         const isUnanswered = !q.userAnswer;
-                        const isTita = !q.options || q.options.length === 0;
+                        const isTita = q.type === 'tita' || !q.options || q.options.length === 0;
+                        const isImageMCQ = q.type === 'mcq_image';
 
                         return (
                             <div
@@ -166,7 +167,57 @@ export default function ResultDetails() {
                                     </div>
                                 </div>
 
-                                {!isTita ? (
+                                {isImageMCQ ? (
+                                    /* MCQ Image options */
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:pl-12 pl-11">
+                                        {q.options.map((opt, i) => {
+                                            const isSelected = q.userAnswer === opt.label;
+                                            const isActualCorrect = q.correctAnswer === opt.label;
+                                            const isAdminAccepted = isSelected && !isActualCorrect && q.isOverridden && q.isCorrect;
+                                            const isAdminRejected = isActualCorrect && q.isOverridden && !q.isCorrect;
+
+                                            let frameCls = 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50';
+                                            let labelCls = 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+                                            let badge = null;
+
+                                            if (isAdminAccepted) {
+                                                frameCls = 'border-green-500 bg-green-50 dark:bg-green-900/10 ring-2 ring-green-500/30';
+                                                labelCls = 'bg-green-500 text-white';
+                                                badge = <span className="material-symbols-outlined text-green-500" title="Accepted by instructor">check_circle</span>;
+                                            } else if (isActualCorrect && !isAdminRejected) {
+                                                frameCls = 'border-green-500 bg-green-50 dark:bg-green-900/10 ring-2 ring-green-500/30';
+                                                labelCls = 'bg-green-500 text-white';
+                                                badge = <span className="material-symbols-outlined text-green-500" title="Correct Answer">check_circle</span>;
+                                            } else if (isSelected && !isActualCorrect && !isAdminAccepted) {
+                                                frameCls = 'border-red-500 bg-red-50 dark:bg-red-900/10 ring-2 ring-red-500/30';
+                                                labelCls = 'bg-red-500 text-white';
+                                                badge = <span className="material-symbols-outlined text-red-500" title="Your Wrong Selection">cancel</span>;
+                                            }
+
+                                            return (
+                                                <div key={i} className={`relative rounded-xl border-2 p-2 ${frameCls}`}>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className={`size-7 rounded-lg flex items-center justify-center text-xs font-black ${labelCls}`}>
+                                                            {opt.label}
+                                                        </span>
+                                                        {isSelected && (
+                                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Your pick</span>
+                                                        )}
+                                                        {badge && <div className="ml-auto">{badge}</div>}
+                                                    </div>
+                                                    <div className="rounded-lg overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                                                        <img
+                                                            src={opt.value}
+                                                            alt={`Option ${opt.label}`}
+                                                            className="w-full max-h-44 object-contain p-1"
+                                                            loading="lazy"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : !isTita ? (
                                     /* MCQ options */
                                     <div className="space-y-3 md:pl-12 pl-11">
                                         {q.options.map((opt, i) => {

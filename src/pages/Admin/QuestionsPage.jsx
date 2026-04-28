@@ -46,6 +46,7 @@ export default function QuestionsPage() {
     });
 
     const [imageUploading, setImageUploading] = useState(false);
+    const [optionImageUploadingIdx, setOptionImageUploadingIdx] = useState(null);
 
     const [bulkText, setBulkText] = useState("");
 
@@ -54,6 +55,7 @@ export default function QuestionsPage() {
     const [editForm, setEditForm] = useState(null);
     const [editSaving, setEditSaving] = useState(false);
     const [editImageUploading, setEditImageUploading] = useState(false);
+    const [editOptionImageUploadingIdx, setEditOptionImageUploadingIdx] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
@@ -120,7 +122,7 @@ export default function QuestionsPage() {
             const next = { ...prev, [name]: value };
             if (name === "type") {
                 next.correctAnswer = "";
-                next.options = value === "mcq" ? defaultMCQOptions : [];
+                next.options = (value === "mcq" || value === "mcq_image") ? defaultMCQOptions : [];
             }
             return next;
         });
@@ -153,6 +155,29 @@ export default function QuestionsPage() {
         }
     };
 
+    const handleOptionImageUpload = async (idx, e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setOptionImageUploadingIdx(idx);
+        try {
+            const formData = new FormData();
+            formData.append("image", file);
+            const { data } = await api.post("/admin/upload", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            setSingleForm(prev => {
+                const next = [...prev.options];
+                next[idx] = { ...next[idx], value: data.url };
+                return { ...prev, options: next };
+            });
+            showToast(`Option ${singleForm.options[idx]?.label} image uploaded`, "success");
+        } catch (err) {
+            showToast(err.response?.data?.message || "Option image upload failed", "error");
+        } finally {
+            setOptionImageUploadingIdx(null);
+        }
+    };
+
     const handleCreateSingle = async (e) => {
         e.preventDefault();
         setSaving(true);
@@ -163,12 +188,20 @@ export default function QuestionsPage() {
                 ...singleForm,
                 options: singleForm.type === "tita" ? [] : singleForm.options,
             };
+            if (singleForm.type === "mcq_image") {
+                const missing = singleForm.options.find(o => !o.value);
+                if (missing) {
+                    showToast(`Upload an image for option ${missing.label}`, "error");
+                    setSaving(false);
+                    return;
+                }
+            }
             await api.post('/admin/questions', payload);
             showToast('Question added to bank', 'success');
             setSingleForm({
                 text: "", subject: "", difficulty: "easy", board: singleForm.board, class: singleForm.class,
                 type: singleForm.type,
-                options: singleForm.type === "mcq" ? defaultMCQOptions : [],
+                options: (singleForm.type === "mcq" || singleForm.type === "mcq_image") ? defaultMCQOptions : [],
                 correctAnswer: "",
                 imageUrl: "",
             });
@@ -204,6 +237,7 @@ export default function QuestionsPage() {
     // ---------- Edit / Delete ----------
     const openEditModal = (q) => {
         setEditingQuestion(q);
+        const isChoice = q.type === "mcq" || q.type === "mcq_image";
         setEditForm({
             text: q.text || "",
             subject: q.subject || "",
@@ -211,7 +245,7 @@ export default function QuestionsPage() {
             board: q.board || "General",
             class: q.class || "General",
             type: q.type || "mcq",
-            options: q.type === "mcq"
+            options: isChoice
                 ? (q.options?.length ? q.options.map(o => ({ label: o.label, value: o.value })) : defaultMCQOptions)
                 : [],
             correctAnswer: q.correctAnswer || "",
@@ -230,10 +264,17 @@ export default function QuestionsPage() {
         setEditForm(prev => {
             const next = { ...prev, [name]: value };
             if (name === "type") {
+                const switchingToChoice = value === "mcq" || value === "mcq_image";
+                const switchingFromChoice = prev.type === "mcq" || prev.type === "mcq_image";
                 next.correctAnswer = "";
-                next.options = value === "mcq"
-                    ? (prev.options?.length ? prev.options : defaultMCQOptions)
-                    : [];
+                if (switchingToChoice) {
+                    // Carry options across only when staying within MCQ-family; otherwise reset
+                    next.options = switchingFromChoice && prev.options?.length
+                        ? prev.options.map(o => ({ label: o.label, value: "" }))
+                        : defaultMCQOptions;
+                } else {
+                    next.options = [];
+                }
             }
             return next;
         });
@@ -245,6 +286,29 @@ export default function QuestionsPage() {
             next[index] = { ...next[index], value };
             return { ...prev, options: next };
         });
+    };
+
+    const handleEditOptionImageUpload = async (idx, e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setEditOptionImageUploadingIdx(idx);
+        try {
+            const formData = new FormData();
+            formData.append("image", file);
+            const { data } = await api.post("/admin/upload", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            setEditForm(prev => {
+                const next = [...prev.options];
+                next[idx] = { ...next[idx], value: data.url };
+                return { ...prev, options: next };
+            });
+            showToast(`Option ${editForm.options[idx]?.label} image uploaded`, "success");
+        } catch (err) {
+            showToast(err.response?.data?.message || "Option image upload failed", "error");
+        } finally {
+            setEditOptionImageUploadingIdx(null);
+        }
     };
 
     const handleEditImageUpload = async (e) => {
@@ -277,6 +341,15 @@ export default function QuestionsPage() {
                 ...editForm,
                 options: editForm.type === "tita" ? [] : editForm.options,
             };
+            // Validate every option image is present for mcq_image
+            if (editForm.type === "mcq_image") {
+                const missing = editForm.options.find(o => !o.value);
+                if (missing) {
+                    showToast(`Upload an image for option ${missing.label}`, "error");
+                    setEditSaving(false);
+                    return;
+                }
+            }
             const { data } = await api.patch(`/admin/questions/${editingQuestion._id}`, payload);
             showToast("Question updated", "success");
 
@@ -481,6 +554,9 @@ export default function QuestionsPage() {
                                                                                     {q.type === "tita" && (
                                                                                         <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20 shrink-0 mt-0.5">TITA</span>
                                                                                     )}
+                                                                                    {q.type === "mcq_image" && (
+                                                                                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/20 shrink-0 mt-0.5">IMAGE</span>
+                                                                                    )}
                                                                                     <div className="flex items-center gap-0.5 shrink-0">
                                                                                         <button
                                                                                             type="button"
@@ -514,6 +590,29 @@ export default function QuestionsPage() {
                                                                                     <div className="flex items-center gap-2 text-xs font-medium p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
                                                                                         <span className="material-symbols-outlined text-sm text-emerald-500 shrink-0">check_circle</span>
                                                                                         <span>Answer: <span className="font-black">{q.correctAnswer}</span></span>
+                                                                                    </div>
+                                                                                ) : q.type === "mcq_image" ? (
+                                                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                                                                        {q.options?.map(opt => {
+                                                                                            const isCorrect = opt.label === q.correctAnswer;
+                                                                                            return (
+                                                                                                <div key={opt.label} className={`relative rounded-lg overflow-hidden border ${isCorrect
+                                                                                                    ? 'border-emerald-400 dark:border-emerald-500/40 ring-2 ring-emerald-300/40'
+                                                                                                    : 'border-slate-200 dark:border-slate-700'
+                                                                                                    } bg-white dark:bg-slate-800/50`}>
+                                                                                                    <img
+                                                                                                        src={opt.value}
+                                                                                                        alt={`Option ${opt.label}`}
+                                                                                                        className="w-full h-20 object-contain p-1"
+                                                                                                        loading="lazy"
+                                                                                                    />
+                                                                                                    <span className={`absolute top-1 left-1 size-5 rounded-md flex items-center justify-center text-[9px] font-black ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'}`}>{opt.label}</span>
+                                                                                                    {isCorrect && (
+                                                                                                        <span className="material-symbols-outlined absolute top-1 right-1 text-[14px] text-emerald-500 bg-white dark:bg-slate-900 rounded-full">check_circle</span>
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            );
+                                                                                        })}
                                                                                     </div>
                                                                                 ) : (
                                                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -694,28 +793,29 @@ export default function QuestionsPage() {
                                     {/* Answer Type Selector */}
                                     <div className="space-y-2">
                                         <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Response Options</label>
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-3 gap-2">
                                             {[
-                                                { value: "mcq", label: "MCQ", icon: "radio_button_checked", desc: "Multiple choice" },
-                                                { value: "tita", label: "TITA", icon: "keyboard", desc: "Type in the answer" },
+                                                { value: "mcq", label: "MCQ", icon: "radio_button_checked", desc: "Text choices" },
+                                                { value: "mcq_image", label: "MCQ Image", icon: "image", desc: "Image choices" },
+                                                { value: "tita", label: "TITA", icon: "keyboard", desc: "Type in answer" },
                                             ].map(({ value, label, icon, desc }) => (
                                                 <button
                                                     key={value}
                                                     type="button"
                                                     onClick={() => handleSingleChange({ target: { name: "type", value } })}
-                                                    className={`flex flex-col items-center gap-1 py-3 px-2 rounded-2xl border-2 font-black text-xs transition-all ${singleForm.type === value
+                                                    className={`flex flex-col items-center gap-1 py-3 px-2 rounded-2xl border-2 font-black text-[11px] transition-all ${singleForm.type === value
                                                         ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500 text-indigo-600 dark:text-indigo-400'
                                                         : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-indigo-300'}`}
                                                 >
                                                     <span className="material-symbols-outlined text-[20px]">{icon}</span>
-                                                    <span className="uppercase tracking-widest">{label}</span>
+                                                    <span className="uppercase tracking-widest text-center leading-tight">{label}</span>
                                                     <span className={`text-[9px] font-medium normal-case ${singleForm.type === value ? 'text-indigo-400' : 'text-slate-400'}`}>{desc}</span>
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
 
-                                    {/* MCQ: A–D option inputs */}
+                                    {/* MCQ: A–D option inputs (text) */}
                                     {singleForm.type === "mcq" && (
                                         <div className="grid grid-cols-1 gap-3">
                                             {singleForm.options.map((opt, idx) => (
@@ -729,10 +829,64 @@ export default function QuestionsPage() {
                                         </div>
                                     )}
 
+                                    {/* MCQ Image: A–D option image uploads */}
+                                    {singleForm.type === "mcq_image" && (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {singleForm.options.map((opt, idx) => {
+                                                const uploading = optionImageUploadingIdx === idx;
+                                                return (
+                                                    <div key={opt.label} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2 space-y-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="size-7 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-[11px] font-black text-indigo-600 dark:text-indigo-400 shrink-0">{opt.label}</span>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Option {opt.label}</span>
+                                                        </div>
+                                                        {opt.value ? (
+                                                            <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                                                                <img src={opt.value} alt={`Option ${opt.label}`} className="w-full h-28 object-contain p-1" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleOptionChange(idx, "")}
+                                                                    className="absolute top-1 right-1 size-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[14px]">close</span>
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <label className={`flex flex-col items-center justify-center gap-1 w-full h-28 rounded-xl border-2 border-dashed cursor-pointer transition-all
+                                                                ${uploading
+                                                                    ? 'border-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5'
+                                                                    : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5'
+                                                                }`}>
+                                                                {uploading ? (
+                                                                    <>
+                                                                        <div className="animate-spin size-5 border-[3px] border-indigo-500 border-t-transparent rounded-full"></div>
+                                                                        <span className="text-[10px] font-bold text-indigo-500">Uploading...</span>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <span className="material-symbols-outlined text-[22px] text-slate-400">add_photo_alternate</span>
+                                                                        <span className="text-[10px] font-bold text-slate-400">Upload {opt.label}</span>
+                                                                    </>
+                                                                )}
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                                                                    className="hidden"
+                                                                    disabled={uploading}
+                                                                    onChange={(e) => handleOptionImageUpload(idx, e)}
+                                                                />
+                                                            </label>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
                                     {/* Correct Answer */}
                                     <div className="space-y-1 pt-2">
                                         <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Correct Answer</label>
-                                        {singleForm.type === "mcq" ? (
+                                        {singleForm.type === "mcq" || singleForm.type === "mcq_image" ? (
                                             <div className="flex gap-2">
                                                 {['A', 'B', 'C', 'D'].map(label => (
                                                     <button key={label} type="button" onClick={() => setSingleForm(prev => ({ ...prev, correctAnswer: label }))}
@@ -764,7 +918,7 @@ export default function QuestionsPage() {
                                             <span className="material-symbols-outlined text-[14px]">info</span> Schema Insight
                                         </p>
                                         <p className="text-[11px] text-amber-700 dark:text-amber-300 font-medium leading-relaxed">
-                                            An array of objects. Labels must match <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded font-bold">correctAnswer</code>.
+                                            An array of objects. Labels must match <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded font-bold">correctAnswer</code>. Use <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded font-bold">type</code>: <code>mcq</code>, <code>tita</code>, or <code>mcq_image</code> (option <code>value</code> must be an image URL for <code>mcq_image</code>).
                                         </p>
                                         <div className="mt-2 text-[10px] bg-white/50 dark:bg-black/20 p-2 rounded-lg font-mono text-slate-600 dark:text-slate-400">
                                             {'[{ "text": "...", "options": [{"label":"A","value":"..."}], "correctAnswer": "A", "difficulty": "easy", "subject": "Math", "board": "CBSE", "class": "Class 10" }]'}
@@ -951,21 +1105,22 @@ export default function QuestionsPage() {
 
                             <div className="space-y-2">
                                 <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Response Options</label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-3 gap-2">
                                     {[
-                                        { value: "mcq", label: "MCQ", icon: "radio_button_checked", desc: "Multiple choice" },
-                                        { value: "tita", label: "TITA", icon: "keyboard", desc: "Type in the answer" },
+                                        { value: "mcq", label: "MCQ", icon: "radio_button_checked", desc: "Text choices" },
+                                        { value: "mcq_image", label: "MCQ Image", icon: "image", desc: "Image choices" },
+                                        { value: "tita", label: "TITA", icon: "keyboard", desc: "Type in answer" },
                                     ].map(({ value, label, icon, desc }) => (
                                         <button
                                             key={value}
                                             type="button"
                                             onClick={() => handleEditChange({ target: { name: "type", value } })}
-                                            className={`flex flex-col items-center gap-1 py-3 px-2 rounded-2xl border-2 font-black text-xs transition-all ${editForm.type === value
+                                            className={`flex flex-col items-center gap-1 py-3 px-2 rounded-2xl border-2 font-black text-[11px] transition-all ${editForm.type === value
                                                 ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500 text-indigo-600 dark:text-indigo-400'
                                                 : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-indigo-300'}`}
                                         >
                                             <span className="material-symbols-outlined text-[20px]">{icon}</span>
-                                            <span className="uppercase tracking-widest">{label}</span>
+                                            <span className="uppercase tracking-widest text-center leading-tight">{label}</span>
                                             <span className={`text-[9px] font-medium normal-case ${editForm.type === value ? 'text-indigo-400' : 'text-slate-400'}`}>{desc}</span>
                                         </button>
                                     ))}
@@ -985,9 +1140,62 @@ export default function QuestionsPage() {
                                 </div>
                             )}
 
+                            {editForm.type === "mcq_image" && (
+                                <div className="grid grid-cols-2 gap-3">
+                                    {editForm.options.map((opt, idx) => {
+                                        const uploading = editOptionImageUploadingIdx === idx;
+                                        return (
+                                            <div key={opt.label} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2 space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="size-7 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-[11px] font-black text-indigo-600 dark:text-indigo-400 shrink-0">{opt.label}</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Option {opt.label}</span>
+                                                </div>
+                                                {opt.value ? (
+                                                    <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                                                        <img src={opt.value} alt={`Option ${opt.label}`} className="w-full h-28 object-contain p-1" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleEditOptionChange(idx, "")}
+                                                            className="absolute top-1 right-1 size-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[14px]">close</span>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <label className={`flex flex-col items-center justify-center gap-1 w-full h-28 rounded-xl border-2 border-dashed cursor-pointer transition-all
+                                                        ${uploading
+                                                            ? 'border-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5'
+                                                            : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5'
+                                                        }`}>
+                                                        {uploading ? (
+                                                            <>
+                                                                <div className="animate-spin size-5 border-[3px] border-indigo-500 border-t-transparent rounded-full"></div>
+                                                                <span className="text-[10px] font-bold text-indigo-500">Uploading...</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="material-symbols-outlined text-[22px] text-slate-400">add_photo_alternate</span>
+                                                                <span className="text-[10px] font-bold text-slate-400">Upload {opt.label}</span>
+                                                            </>
+                                                        )}
+                                                        <input
+                                                            type="file"
+                                                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                                                            className="hidden"
+                                                            disabled={uploading}
+                                                            onChange={(e) => handleEditOptionImageUpload(idx, e)}
+                                                        />
+                                                    </label>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
                             <div className="space-y-1 pt-2">
                                 <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Correct Answer</label>
-                                {editForm.type === "mcq" ? (
+                                {editForm.type === "mcq" || editForm.type === "mcq_image" ? (
                                     <div className="flex gap-2">
                                         {['A', 'B', 'C', 'D'].map(label => (
                                             <button key={label} type="button" onClick={() => setEditForm(prev => ({ ...prev, correctAnswer: label }))}
