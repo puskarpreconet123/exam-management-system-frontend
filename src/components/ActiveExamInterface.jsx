@@ -674,19 +674,30 @@ export default function ActiveExamInterface() {
                                 <span className="hidden lg:inline text-xs uppercase tracking-widest">Clear Answer</span>
                             </button>
 
-                            {/* Save & Next - Primary Action Style */}
-                            <button
-                                onClick={handleSaveNext}
-                                disabled={currentIdx === questions.length - 1}
-                                className="group relative flex items-center gap-1 md:gap-2 px-4 md:px-10 py-2 md:py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300  lg:mr-0 disabled:opacity-40 disabled:hover:shadow-none disabled:hover:bg-indigo-600 dark:disabled:hover:bg-indigo-500 disabled:active:scale-100 disabled:cursor-not-allowed"
-                            >
-                                <span className="hidden md:inline tracking-wide">Save & Next</span>
-                                {/* <span className="inline md:hidden tracking-wide text-sm">Next</span> */}
-                                <span className="material-symbols-outlined text-lg md:text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
+                            {/* Save & Next / Submit - Primary Action Style */}
+                            {currentIdx === questions.length - 1 ? (
+                                <button
+                                    onClick={() => handleSubmit()}
+                                    className="group relative flex items-center gap-1 md:gap-2 px-4 md:px-10 py-2 md:py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 hover:shadow-xl active:scale-[0.97] transition-all duration-300 lg:mr-0"
+                                >
+                                    <span className="hidden md:inline tracking-wide">Submit</span>
+                                    <span className="material-symbols-outlined text-lg md:text-xl transition-transform group-hover:translate-x-1">check_circle</span>
 
-                                {/* Subtle Shine Effect */}
-                                <div className="absolute inset-0 rounded-xl bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
-                            </button>
+                                    {/* Subtle Shine Effect */}
+                                    <div className="absolute inset-0 rounded-xl bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleSaveNext}
+                                    className="group relative flex items-center gap-1 md:gap-2 px-4 md:px-10 py-2 md:py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300 lg:mr-0"
+                                >
+                                    <span className="hidden md:inline tracking-wide">Save & Next</span>
+                                    <span className="material-symbols-outlined text-lg md:text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
+
+                                    {/* Subtle Shine Effect */}
+                                    <div className="absolute inset-0 rounded-xl bg-linear-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
+                                </button>
+                            )}
 
                         </div>
                     </div>

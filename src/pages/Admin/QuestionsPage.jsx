@@ -237,17 +237,21 @@ export default function QuestionsPage() {
     // ---------- Edit / Delete ----------
     const openEditModal = (q) => {
         setEditingQuestion(q);
-        const isChoice = q.type === "mcq" || q.type === "mcq_image";
+        const resolvedType = q.type || "mcq";
+        const isChoice = resolvedType === "mcq" || resolvedType === "mcq_image";
+        const existingByLabel = new Map((q.options || []).map(o => [o.label, o.value]));
+        const mergedOptions = defaultMCQOptions.map(o => ({
+            label: o.label,
+            value: existingByLabel.get(o.label) || "",
+        }));
         setEditForm({
             text: q.text || "",
             subject: q.subject || "",
             difficulty: q.difficulty || "easy",
             board: q.board || "General",
             class: q.class || "General",
-            type: q.type || "mcq",
-            options: isChoice
-                ? (q.options?.length ? q.options.map(o => ({ label: o.label, value: o.value })) : defaultMCQOptions)
-                : [],
+            type: resolvedType,
+            options: isChoice ? mergedOptions : [],
             correctAnswer: q.correctAnswer || "",
             imageUrl: q.imageUrl || "",
         });
