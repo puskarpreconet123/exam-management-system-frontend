@@ -476,7 +476,7 @@ export default function QuestionsPage() {
                         </div>
                     </div>
 
-                    <div className="space-y-3 max-h-[75vh] overflow-y-auto custom-scrollbar pr-1 pb-4">
+                    <div className="space-y-3 lg:h-[75vh] overflow-y-auto custom-scrollbar pr-1 pb-4">
                         {summaryLoading ? (
                             <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                                 <div className="animate-spin size-8 border-[3px] border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -673,8 +673,8 @@ export default function QuestionsPage() {
 
                 {/* ---- Right: Addition Interface ---- */}
                 <div className="lg:col-span-2 space-y-6 sticky top-24">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none overflow-hidden">
-                        <div className="flex border-b border-slate-100 dark:border-slate-800 p-2 gap-1 bg-slate-50/50 dark:bg-slate-800/50">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none overflow-hidden lg:h-[75vh] flex flex-col">
+                        <div className="flex border-b border-slate-100 dark:border-slate-800 p-2 gap-1 bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
                             <button onClick={() => setActiveTab('single')} className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'single' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
                                 Single Item
                             </button>
@@ -683,7 +683,7 @@ export default function QuestionsPage() {
                             </button>
                         </div>
 
-                        <div className="p-6 md:p-8">
+                        <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar">
                             {activeTab === 'single' ? (
                                 <form onSubmit={handleCreateSingle} className="space-y-4">
                                     <div className="space-y-1">

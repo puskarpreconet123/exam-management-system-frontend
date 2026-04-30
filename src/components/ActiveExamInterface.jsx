@@ -425,6 +425,7 @@ export default function ActiveExamInterface() {
                 @media (max-width: 1024px) {
                     #global-theme-toggle { display: none !important; }
                 }
+                .grecaptcha-badge { visibility: hidden !important; }
             `}</style>
             {/* Top Navigation Bar */}
             <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-4 lg:px-6 py-2 md:py-3 z-30 relative">
