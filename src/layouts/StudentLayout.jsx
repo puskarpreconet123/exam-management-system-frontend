@@ -2,19 +2,20 @@ import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
 import { ThemeToggle } from '../components/ThemeContext';
+import NotificationDropdown from '../components/NotificationDropdown';
 
 export default function StudentLayout() {
     const { user, logout } = useAuth();
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const appTitle = import.meta.env.VITE_APP_TITLE || 'EduDash';
 
     const navItems = [
         { to: "/dashboard", icon: "dashboard", label: "Dashboard" },
         { to: "/results", icon: "analytics", label: "My Results" },
-        { to: "/settings", icon: "settings", label: "Settings" },
     ];
 
     return (
-        <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0f172a] overflow-hidden">
+        <div className="flex h-screen w-full bg-[#fffcf0] dark:bg-[#0c0a09] overflow-hidden">
             {/* Mobile Overlay */}
             {isMobileMenuOpen && (
                 <div 
@@ -32,10 +33,10 @@ export default function StudentLayout() {
             `}>
                 {/* 1. Brand Logo Area */}
                 <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
-                    <div className="size-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                    <div className="size-8 bg-orange-500 rounded-lg flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
                         <span className="material-symbols-outlined text-xl font-bold">school</span>
                     </div>
-                    <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">ExamCore</h2>
+                    <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">{appTitle}</h2>
                 </div>
                 
                 {/* 2. Navigation Area (Scrollable) */}
@@ -46,10 +47,10 @@ export default function StudentLayout() {
                             to={item.to}
                             onClick={() => setMobileMenuOpen(false)}
                             className={({ isActive }) => 
-                                `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                                `flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 ${
                                     isActive 
-                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                    ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20' 
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-orange-50 dark:hover:bg-orange-500/10'
                                 }`
                             }
                         >
@@ -62,9 +63,9 @@ export default function StudentLayout() {
                 {/* 3. PROFILE & LOGOUT SECTION (Pinned to bottom) */}
                 <div className="mt-auto p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
                     {/* User Card */}
-                    <div className="flex items-center gap-3 p-2 mb-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer">
+                    <div className="flex items-center gap-3 p-2 mb-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer">
                         <div className="relative shrink-0">
-                            <div className="size-10 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm">
+                            <div className="size-10 rounded-md bg-linear-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold shadow-sm">
                                 {user?.name?.charAt(0).toUpperCase() || 'U'}
                             </div>
                             <span className="absolute -bottom-0.5 -right-0.5 size-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
@@ -82,7 +83,7 @@ export default function StudentLayout() {
                     {/* Logout Button */}
                     <button 
                         onClick={logout} 
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-bold hover:bg-red-100 dark:hover:bg-red-500/20 transition-all border-none"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-bold hover:bg-red-100 dark:hover:bg-red-500/20 transition-all border-none"
                     >
                         <span className="material-symbols-outlined text-lg">logout</span>
                         <span>Sign Out</span>
@@ -110,10 +111,7 @@ export default function StudentLayout() {
                             <span className="text-[10px] font-black uppercase tracking-widest">Live</span>
                         </div>
                         <ThemeToggle />
-                        <button className="p-2 text-slate-400 hover:text-blue-600 transition-colors relative">
-                            <span className="material-symbols-outlined">notifications</span>
-                            <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                        </button>
+                        <NotificationDropdown />
                     </div>
                 </header>
 

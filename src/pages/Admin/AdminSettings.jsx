@@ -11,9 +11,9 @@ export default function AdminSettings() {
                 <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Configure portal preferences and administrative controls.</p>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div className="p-8 text-center border-b border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30">
-                    <div className="size-24 rounded-3xl bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-3xl font-black mx-auto mb-4 shadow-lg shadow-indigo-500/20">
+                    <div className="size-24 rounded-md bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-3xl font-black mx-auto mb-4 shadow-lg shadow-indigo-500/20">
                         {user?.name?.charAt(0).toUpperCase() || 'A'}
                     </div>
                     <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{user?.name || 'Administrator'}</h2>
@@ -33,7 +33,7 @@ export default function AdminSettings() {
                         We are currently building advanced management tools for user permissions, system audits, and global notification settings.
                     </p>
                     <div className="mt-8 flex justify-center gap-3">
-                        <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-[10px] font-black text-slate-400 uppercase tracking-widest">Version 2.4.0-Stable</div>
+                        <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-md text-[10px] font-black text-slate-400 uppercase tracking-widest">Version 2.4.0-Stable</div>
                     </div>
                 </div>
             </div>

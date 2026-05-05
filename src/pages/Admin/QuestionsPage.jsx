@@ -428,9 +428,20 @@ export default function QuestionsPage() {
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-            <div>
-                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Question Bank</h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Manage and categorize your central library of assessment items.</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Question Bank</h1>
+                        <span className="px-3 py-1 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-black uppercase tracking-widest rounded-lg border border-orange-100 dark:border-orange-500/20">
+                            {totalRecords} Items
+                        </span>
+                    </div>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">Manage and categorize your central library of assessment items.</p>
+                </div>
+                <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-6 py-3 shadow-sm items-center gap-3">
+                    <div className="size-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">Live Vault System</span>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
@@ -438,12 +449,12 @@ export default function QuestionsPage() {
                 {/* ---- Left: Inventory Explorer ---- */}
                 <div className="lg:col-span-3 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between px-1 gap-2">
-                        <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">Inventory Explorer</h2>
+                        <h2 className="text-sm font-black uppercase tracking-widest text-slate-400">Inventory Explorer</h2>
                         <div className="flex flex-wrap items-center gap-2">
                             <select
                                 value={filterBoard}
                                 onChange={(e) => setFilterBoard(e.target.value)}
-                                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-bold focus:border-indigo-500 outline-none"
+                                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all"
                             >
                                 <option value="General">General Board</option>
                                 <option value="CBSE">CBSE</option>
@@ -453,7 +464,7 @@ export default function QuestionsPage() {
                             <select
                                 value={filterClass}
                                 onChange={(e) => setFilterClass(e.target.value)}
-                                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-bold focus:border-indigo-500 outline-none"
+                                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all"
                             >
                                 <option value="General">General Class</option>
                                 <option value="Class 5">Class 5</option>
@@ -465,15 +476,12 @@ export default function QuestionsPage() {
                                 <option value="Class 11">Class 11</option>
                                 <option value="Class 12">Class 12</option>
                             </select>
-                            <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 px-3 py-1 rounded-full text-[10px] font-black uppercase shadow-sm">
-                                {totalRecords} Items
-                            </span>
                             <button
                                 onClick={loadSummary}
                                 disabled={summaryLoading}
-                                className="p-2 hover:bg-slate-100 dark:bg-slate-800 rounded-xl transition-all disabled:opacity-60"
+                                className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 transition-all disabled:opacity-60 shadow-sm"
                             >
-                                <span className={`material-symbols-outlined text-indigo-600 text-sm ${summaryLoading ? 'animate-spin' : ''}`}>
+                                <span className={`material-symbols-outlined text-orange-600 text-sm flex items-center justify-center ${summaryLoading ? 'animate-spin' : ''}`}>
                                     {summaryLoading ? 'sync' : 'refresh'}
                                 </span>
                             </button>
@@ -482,30 +490,48 @@ export default function QuestionsPage() {
 
                     <div className="space-y-3 lg:h-[75vh] overflow-y-auto custom-scrollbar pr-1 pb-4">
                         {summaryLoading ? (
-                            <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                <div className="animate-spin size-8 border-[3px] border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-                                <p className="text-sm text-slate-500 font-bold">Organising your vault...</p>
+                            <div className="py-20 flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl border-dashed">
+                                <div className="animate-spin size-8 border-4 border-orange-500 border-t-transparent rounded-full mb-4"></div>
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Scanning Vault...</p>
                             </div>
                         ) : summary.length === 0 ? (
-                            <div className="p-12 text-center text-slate-500 font-bold bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                Vault is empty. Add the first question to get started.
+                            <div className="py-20 flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl border-dashed">
+                                <span className="material-symbols-outlined text-4xl text-slate-300 mb-4">inventory_2</span>
+                                <p className="text-sm font-bold text-slate-500">No questions found for this selection.</p>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Start by adding your first question</p>
                             </div>
                         ) : summary.map(({ subject, total, difficulties }) => (
-                            <div key={subject} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                            <div key={subject} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group">
 
                                 {/* Level 1 — Subject Header */}
                                 <button
                                     onClick={() => toggleSubject(subject)}
-                                    className="w-full px-5 py-4 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                                    className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                                 >
-                                    <div className="size-9 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center shrink-0">
-                                        <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[20px]">book</span>
+                                    <div className="flex items-center gap-4">
+                                        <div className="size-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
+                                            <span className="material-symbols-outlined text-xl">folder_special</span>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight uppercase tracking-widest">{subject}</h3>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className="text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest">{total} Questions</span>
+                                                <span className="size-1 bg-slate-300 rounded-full"></span>
+                                                <div className="flex items-center gap-1.5">
+                                                    {difficulties.map(d => {
+                                                        const style = getDiffStyle(d.difficulty);
+                                                        return (
+                                                            <div key={d.difficulty} className="flex items-center gap-1">
+                                                                <span className={`size-1.5 rounded-full ${style.dot}`}></span>
+                                                                <span className="text-[10px] font-bold text-slate-400">{d.count}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight text-left flex-1">{subject}</span>
-                                    <span className="text-[10px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0 mr-1">
-                                        {total} Qs
-                                    </span>
-                                    <span className={`material-symbols-outlined text-slate-400 text-[20px] transition-transform duration-300 shrink-0 ${expandedSubject === subject ? 'rotate-180' : ''}`}>
+                                    <span className={`material-symbols-outlined text-slate-400 transition-transform duration-300 ${expandedSubject === subject ? 'rotate-180' : ''}`}>
                                         expand_more
                                     </span>
                                 </button>
@@ -543,7 +569,7 @@ export default function QuestionsPage() {
                                                         <div className="bg-slate-50/40 dark:bg-slate-800/20 animate-in fade-in duration-200">
                                                             {meta.loading ? (
                                                                 <div className="p-8 flex flex-col items-center gap-3">
-                                                                    <div className="animate-spin size-6 border-[3px] border-indigo-500 border-t-transparent rounded-full"></div>
+                                                                    <div className="animate-spin size-6 border-[3px] border-orange-500 border-t-transparent rounded-full"></div>
                                                                     <p className="text-xs font-bold text-slate-400">Loading questions...</p>
                                                                 </div>
                                                             ) : qs.length === 0 ? (
@@ -552,86 +578,99 @@ export default function QuestionsPage() {
                                                                 <>
                                                                     <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
                                                                         {qs.map((q) => (
-                                                                            <div key={q._id} className="px-5 py-4 hover:bg-white dark:hover:bg-slate-800/40 transition-colors">
-                                                                                <div className="flex items-start gap-2 mb-2">
-                                                                                    <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 leading-relaxed flex-1">{renderTextWithFractions(q.text)}</h4>
-                                                                                    {q.type === "tita" && (
-                                                                                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20 shrink-0 mt-0.5">TITA</span>
-                                                                                    )}
-                                                                                    {q.type === "mcq_image" && (
-                                                                                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/20 shrink-0 mt-0.5">IMAGE</span>
-                                                                                    )}
-                                                                                    <div className="flex items-center gap-0.5 shrink-0">
+                                                                            <div key={q._id} className="px-6 py-6 hover:bg-white dark:hover:bg-slate-800/60 transition-all border-b border-slate-50 dark:border-slate-800/50 last:border-0 group/card">
+                                                                                <div className="flex items-start gap-4 mb-4">
+                                                                                    <div className="size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 group-hover/card:bg-orange-50 dark:group-hover/card:bg-orange-500/10 transition-colors">
+                                                                                        <span className="text-[10px] font-black text-slate-400 group-hover/card:text-orange-600 tracking-tighter">Q</span>
+                                                                                    </div>
+                                                                                    <div className="flex-1 min-w-0">
+                                                                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                                                            {q.type === "tita" && (
+                                                                                                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20">TITA</span>
+                                                                                            )}
+                                                                                            {q.type === "mcq_image" && (
+                                                                                                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20">IMAGE</span>
+                                                                                            )}
+                                                                                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">ID: {q._id.slice(-6)}</span>
+                                                                                        </div>
+                                                                                        <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 leading-relaxed break-words">{renderTextWithFractions(q.text)}</h4>
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
                                                                                         <button
                                                                                             type="button"
                                                                                             onClick={() => openEditModal(q)}
-                                                                                            title="Edit question"
-                                                                                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
+                                                                                            className="p-2 rounded-xl text-slate-400 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-500/10 transition-all"
                                                                                         >
-                                                                                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                                                                                            <span className="material-symbols-outlined text-[18px]">edit_note</span>
                                                                                         </button>
                                                                                         <button
                                                                                             type="button"
                                                                                             onClick={() => requestDelete(q)}
-                                                                                            title="Delete question"
-                                                                                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                                                                                            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"
                                                                                         >
-                                                                                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                                                                                            <span className="material-symbols-outlined text-[18px]">delete</span>
                                                                                         </button>
                                                                                     </div>
                                                                                 </div>
                                                                                 {q.imageUrl && (
-                                                                                    <div className="mb-2 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                                                                                    <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2">
                                                                                         <img
                                                                                             src={q.imageUrl}
                                                                                             alt="Question illustration"
-                                                                                            className="w-full max-h-48 object-contain p-1.5"
+                                                                                            className="w-full max-h-64 object-contain rounded-lg"
                                                                                             loading="lazy"
                                                                                         />
                                                                                     </div>
                                                                                 )}
                                                                                 {q.type === "tita" ? (
-                                                                                    <div className="flex items-center gap-2 text-xs font-medium p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-                                                                                        <span className="material-symbols-outlined text-sm text-emerald-500 shrink-0">check_circle</span>
-                                                                                        <span>Answer: <span className="font-black">{q.correctAnswer}</span></span>
+                                                                                    <div className="flex items-center gap-3 text-xs font-bold p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                                                                                        <span className="material-symbols-outlined text-sm text-emerald-500">verified</span>
+                                                                                        <span>Solution: <span className="font-black underline decoration-2 underline-offset-2">{q.correctAnswer}</span></span>
                                                                                     </div>
                                                                                 ) : q.type === "mcq_image" ? (
-                                                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                                                                         {q.options?.map(opt => {
                                                                                             const isCorrect = opt.label === q.correctAnswer;
                                                                                             return (
-                                                                                                <div key={opt.label} className={`relative rounded-lg overflow-hidden border ${isCorrect
+                                                                                                <div key={opt.label} className={`relative rounded-xl overflow-hidden border ${isCorrect
                                                                                                     ? 'border-emerald-400 dark:border-emerald-500/40 ring-2 ring-emerald-300/40'
                                                                                                     : 'border-slate-200 dark:border-slate-700'
-                                                                                                    } bg-white dark:bg-slate-800/50`}>
+                                                                                                    } bg-white dark:bg-slate-800/50 group/opt`}>
                                                                                                     <img
                                                                                                         src={opt.value}
                                                                                                         alt={`Option ${opt.label}`}
-                                                                                                        className="w-full h-20 object-contain p-1"
+                                                                                                        className="w-full h-24 object-contain p-2"
                                                                                                         loading="lazy"
                                                                                                     />
-                                                                                                    <span className={`absolute top-1 left-1 size-5 rounded-md flex items-center justify-center text-[9px] font-black ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'}`}>{opt.label}</span>
+                                                                                                    <div className={`absolute top-2 left-2 size-6 rounded-lg flex items-center justify-center text-[10px] font-black ${isCorrect ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'}`}>
+                                                                                                        {opt.label}
+                                                                                                    </div>
                                                                                                     {isCorrect && (
-                                                                                                        <span className="material-symbols-outlined absolute top-1 right-1 text-[14px] text-emerald-500 bg-white dark:bg-slate-900 rounded-full">check_circle</span>
+                                                                                                        <div className="absolute bottom-1 right-1">
+                                                                                                            <span className="material-symbols-outlined text-[14px] text-emerald-500 bg-white dark:bg-slate-900 rounded-full shadow-sm">check_circle</span>
+                                                                                                        </div>
                                                                                                     )}
                                                                                                 </div>
                                                                                             );
                                                                                         })}
                                                                                     </div>
                                                                                 ) : (
-                                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                                                                                        {q.options?.map(opt => (
-                                                                                            <div key={opt.label} className={`flex items-start gap-2 text-xs font-medium p-1.5 rounded-lg ${opt.label === q.correctAnswer
-                                                                                                ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20'
-                                                                                                : 'text-slate-500'
-                                                                                                }`}>
-                                                                                                <span className="opacity-50 font-black shrink-0">{opt.label}.</span>
-                                                                                                <span className="wrap-break-word">{renderTextWithFractions(opt.value)}</span>
-                                                                                                {opt.label === q.correctAnswer && (
-                                                                                                    <span className="material-symbols-outlined text-sm ml-auto text-emerald-500 shrink-0">check_circle</span>
-                                                                                                )}
-                                                                                            </div>
-                                                                                        ))}
+                                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                                        {q.options?.map(opt => {
+                                                                                            const isCorrect = opt.label === q.correctAnswer;
+                                                                                            return (
+                                                                                                <div key={opt.label} className={`flex items-start gap-3 text-xs font-bold p-3 rounded-xl transition-all ${isCorrect
+                                                                                                    ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20'
+                                                                                                    : 'text-slate-500 bg-slate-50/50 dark:bg-slate-800/30 border border-transparent'
+                                                                                                    }`}>
+                                                                                                    <span className={`size-5 rounded flex items-center justify-center shrink-0 font-black text-[10px] ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-400'}`}>{opt.label}</span>
+                                                                                                    <span className="flex-1">{renderTextWithFractions(opt.value)}</span>
+                                                                                                    {isCorrect && (
+                                                                                                        <span className="material-symbols-outlined text-sm text-emerald-500 shrink-0">check_circle</span>
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            );
+                                                                                        })}
                                                                                     </div>
                                                                                 )}
                                                                             </div>
@@ -677,12 +716,12 @@ export default function QuestionsPage() {
 
                 {/* ---- Right: Addition Interface ---- */}
                 <div className="lg:col-span-2 space-y-6 sticky top-24">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none overflow-hidden lg:h-[75vh] flex flex-col">
+                    <div className="bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none overflow-hidden lg:h-[75vh] flex flex-col">
                         <div className="flex border-b border-slate-100 dark:border-slate-800 p-2 gap-1 bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
-                            <button onClick={() => setActiveTab('single')} className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'single' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
+                            <button onClick={() => setActiveTab('single')} className={`flex-1 py-2.5 rounded-md text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'single' ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
                                 Single Item
                             </button>
-                            <button onClick={() => setActiveTab('bulk')} className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'bulk' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
+                            <button onClick={() => setActiveTab('bulk')} className={`flex-1 py-2.5 rounded-md text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'bulk' ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}>
                                 Bulk Import
                             </button>
                         </div>
@@ -693,7 +732,7 @@ export default function QuestionsPage() {
                                     <div className="space-y-1">
                                         <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Question Body</label>
                                         <textarea name="text" value={singleForm.text} onChange={handleSingleChange} required rows={3}
-                                            className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none resize-none"
+                                            className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none resize-none"
                                             placeholder="Enter the question text here..."
                                         />
                                     </div>
@@ -705,7 +744,7 @@ export default function QuestionsPage() {
                                         </label>
 
                                         {singleForm.imageUrl ? (
-                                            <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                                            <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                                                 <img
                                                     src={singleForm.imageUrl}
                                                     alt="Question"
@@ -720,15 +759,15 @@ export default function QuestionsPage() {
                                                 </button>
                                             </div>
                                         ) : (
-                                            <label className={`flex flex-col items-center justify-center gap-2 w-full py-6 rounded-2xl border-2 border-dashed cursor-pointer transition-all
+                                            <label className={`flex flex-col items-center justify-center gap-2 w-full py-6 rounded-lg border-2 border-dashed cursor-pointer transition-all
                                                 ${imageUploading
-                                                    ? 'border-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5'
-                                                    : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5'
+                                                    ? 'border-orange-300 bg-orange-50/50 dark:bg-orange-500/5'
+                                                    : 'border-slate-200 dark:border-slate-700 hover:border-orange-400 hover:bg-orange-50/30 dark:hover:bg-orange-500/5'
                                                 }`}>
                                                 {imageUploading ? (
                                                     <>
-                                                        <div className="animate-spin size-6 border-[3px] border-indigo-500 border-t-transparent rounded-full"></div>
-                                                        <span className="text-xs font-bold text-indigo-500">Uploading...</span>
+                                                        <div className="animate-spin size-6 border-[3px] border-orange-500 border-t-transparent rounded-full"></div>
+                                                        <span className="text-xs font-bold text-orange-500">Uploading...</span>
                                                     </>
                                                 ) : (
                                                     <>
@@ -752,7 +791,7 @@ export default function QuestionsPage() {
                                         <div className="space-y-1">
                                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Board</label>
                                             <select name="board" value={singleForm.board} onChange={handleSingleChange}
-                                                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
+                                                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none appearance-none">
                                                 <option value="General">General</option>
                                                 <option value="CBSE">CBSE</option>
                                                 <option value="ICSE">ICSE</option>
@@ -762,7 +801,7 @@ export default function QuestionsPage() {
                                         <div className="space-y-1">
                                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Class</label>
                                             <select name="class" value={singleForm.class} onChange={handleSingleChange}
-                                                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
+                                                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none appearance-none">
                                                 <option value="General">General</option>
                                                 <option value="Class 5">Class 5</option>
                                                 <option value="Class 6">Class 6</option>
@@ -780,13 +819,13 @@ export default function QuestionsPage() {
                                         <div className="space-y-1">
                                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Subject</label>
                                             <input name="subject" value={singleForm.subject} onChange={handleSingleChange} required
-                                                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
+                                                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none"
                                                 placeholder="Math, Bio, etc." />
                                         </div>
                                         <div className="space-y-1">
                                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Difficulty</label>
                                             <select name="difficulty" value={singleForm.difficulty} onChange={handleSingleChange}
-                                                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
+                                                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none appearance-none">
                                                 <option value="easy">Easy</option>
                                                 <option value="medium">Medium</option>
                                                 <option value="hard">Hard</option>
@@ -807,13 +846,13 @@ export default function QuestionsPage() {
                                                     key={value}
                                                     type="button"
                                                     onClick={() => handleSingleChange({ target: { name: "type", value } })}
-                                                    className={`flex flex-col items-center gap-1 py-3 px-2 rounded-2xl border-2 font-black text-[11px] transition-all ${singleForm.type === value
-                                                        ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                                        : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-indigo-300'}`}
+                                                    className={`flex flex-col items-center gap-1 py-3 px-2 rounded-lg border-2 font-black text-[11px] transition-all ${singleForm.type === value
+                                                        ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400'
+                                                        : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-orange-300'}`}
                                                 >
                                                     <span className="material-symbols-outlined text-[20px]">{icon}</span>
                                                     <span className="uppercase tracking-widest text-center leading-tight">{label}</span>
-                                                    <span className={`text-[9px] font-medium normal-case ${singleForm.type === value ? 'text-indigo-400' : 'text-slate-400'}`}>{desc}</span>
+                                                    <span className={`text-[9px] font-medium normal-case ${singleForm.type === value ? 'text-orange-400' : 'text-slate-400'}`}>{desc}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -826,7 +865,7 @@ export default function QuestionsPage() {
                                                 <div key={opt.label} className="flex items-center gap-3">
                                                     <span className="size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0 uppercase tracking-tighter">{opt.label}</span>
                                                     <input value={opt.value} onChange={(e) => handleOptionChange(idx, e.target.value)} required
-                                                        className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2 text-xs font-bold focus:border-indigo-500 transition-all outline-none"
+                                                        className="flex-1 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2 text-xs font-bold focus:border-orange-500 transition-all outline-none"
                                                         placeholder={`Content for Option ${opt.label}`} />
                                                 </div>
                                             ))}
@@ -839,13 +878,13 @@ export default function QuestionsPage() {
                                             {singleForm.options.map((opt, idx) => {
                                                 const uploading = optionImageUploadingIdx === idx;
                                                 return (
-                                                    <div key={opt.label} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2 space-y-2">
+                                                    <div key={opt.label} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2 space-y-2">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="size-7 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-[11px] font-black text-indigo-600 dark:text-indigo-400 shrink-0">{opt.label}</span>
+                                                            <span className="size-7 rounded-lg bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-[11px] font-black text-orange-600 dark:text-orange-400 shrink-0">{opt.label}</span>
                                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Option {opt.label}</span>
                                                         </div>
                                                         {opt.value ? (
-                                                            <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                                                            <div className="relative rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
                                                                 <img src={opt.value} alt={`Option ${opt.label}`} className="w-full h-28 object-contain p-1" />
                                                                 <button
                                                                     type="button"
@@ -856,15 +895,15 @@ export default function QuestionsPage() {
                                                                 </button>
                                                             </div>
                                                         ) : (
-                                                            <label className={`flex flex-col items-center justify-center gap-1 w-full h-28 rounded-xl border-2 border-dashed cursor-pointer transition-all
+                                                            <label className={`flex flex-col items-center justify-center gap-1 w-full h-28 rounded-md border-2 border-dashed cursor-pointer transition-all
                                                                 ${uploading
-                                                                    ? 'border-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5'
-                                                                    : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5'
+                                                                    ? 'border-orange-300 bg-orange-50/50 dark:bg-orange-500/5'
+                                                                    : 'border-slate-200 dark:border-slate-700 hover:border-orange-400 hover:bg-orange-50/30 dark:hover:bg-orange-500/5'
                                                                 }`}>
                                                                 {uploading ? (
                                                                     <>
-                                                                        <div className="animate-spin size-5 border-[3px] border-indigo-500 border-t-transparent rounded-full"></div>
-                                                                        <span className="text-[10px] font-bold text-indigo-500">Uploading...</span>
+                                                                        <div className="animate-spin size-5 border-[3px] border-orange-500 border-t-transparent rounded-full"></div>
+                                                                        <span className="text-[10px] font-bold text-orange-500">Uploading...</span>
                                                                     </>
                                                                 ) : (
                                                                     <>
@@ -894,7 +933,7 @@ export default function QuestionsPage() {
                                             <div className="flex gap-2">
                                                 {['A', 'B', 'C', 'D'].map(label => (
                                                     <button key={label} type="button" onClick={() => setSingleForm(prev => ({ ...prev, correctAnswer: label }))}
-                                                        className={`flex-1 py-3 rounded-xl border-2 font-black text-sm transition-all ${singleForm.correctAnswer === label ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-emerald-300'}`}>
+                                                        className={`flex-1 py-3 rounded-md border-2 font-black text-sm transition-all ${singleForm.correctAnswer === label ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-emerald-300'}`}>
                                                         {label}
                                                     </button>
                                                 ))}
@@ -905,19 +944,19 @@ export default function QuestionsPage() {
                                                 value={singleForm.correctAnswer}
                                                 onChange={handleSingleChange}
                                                 required
-                                                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                                                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none"
                                                 placeholder="e.g. 42 or Paris (exact match)"
                                             />
                                         )}
                                     </div>
 
-                                    <button type="submit" disabled={saving} className="w-full mt-4 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-500/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                                    <button type="submit" disabled={saving} className="w-full mt-4 py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-black text-sm shadow-xl shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                                         {saving ? 'Saving...' : 'Commit to Bank'}
                                     </button>
                                 </form>
                             ) : (
                                 <form onSubmit={handleBulkUpload} className="space-y-4">
-                                    <div className="p-4 bg-amber-50 dark:bg-amber-500/10 rounded-2xl border border-amber-100 dark:border-amber-500/20 mb-4">
+                                    <div className="p-4 bg-amber-50 dark:bg-amber-500/10 rounded-lg border border-amber-100 dark:border-amber-500/20 mb-4">
                                         <p className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-[14px]">info</span> Schema Insight
                                         </p>
@@ -929,10 +968,10 @@ export default function QuestionsPage() {
                                         </div>
                                     </div>
                                     <textarea rows={10} value={bulkText} onChange={(e) => setBulkText(e.target.value)}
-                                        className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-[11px] font-mono text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:border-indigo-500 transition-all outline-none resize-none"
+                                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-[11px] font-mono text-slate-700 dark:text-slate-300 placeholder:text-slate-400 focus:border-orange-500 transition-all outline-none resize-none"
                                         placeholder='[{"text": "Sample question?", "options": [...], "correctAnswer": "A"}]'
                                     />
-                                    <button type="submit" disabled={saving || !bulkText} className="w-full mt-2 py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-black text-sm transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                                    <button type="submit" disabled={saving || !bulkText} className="w-full mt-2 py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-black text-sm transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                                         {saving ? 'Processing Batch...' : 'Initiate Bulk Load'}
                                     </button>
                                 </form>
@@ -947,7 +986,7 @@ export default function QuestionsPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 animate-in fade-in duration-200" onClick={cancelDelete}>
                     <div
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200"
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200"
                     >
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-3 bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-500 rounded-full flex shrink-0">
@@ -958,7 +997,7 @@ export default function QuestionsPage() {
                         <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 leading-relaxed">
                             This action cannot be undone. The question will be permanently removed from the bank.
                         </p>
-                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl p-3 mb-6 line-clamp-3 leading-relaxed">
+                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-md p-3 mb-6 line-clamp-3 leading-relaxed">
                             "{deleteTarget.text}"
                         </div>
                         <div className="flex justify-end gap-3 w-full">
@@ -966,7 +1005,7 @@ export default function QuestionsPage() {
                                 type="button"
                                 onClick={cancelDelete}
                                 disabled={deleting}
-                                className="flex-1 px-4 py-3 font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all border-none cursor-pointer disabled:opacity-40"
+                                className="flex-1 px-4 py-3 font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-all border-none cursor-pointer disabled:opacity-40"
                             >
                                 Cancel
                             </button>
@@ -974,7 +1013,7 @@ export default function QuestionsPage() {
                                 type="button"
                                 onClick={confirmDelete}
                                 disabled={deleting}
-                                className="flex-1 px-4 py-3 font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-lg shadow-rose-600/30 border-none cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+                                className="flex-1 px-4 py-3 font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-md transition-all shadow-lg shadow-rose-600/30 border-none cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
                             >
                                 {deleting && (
                                     <span className="material-symbols-outlined text-[16px] animate-spin">sync</span>
@@ -991,12 +1030,12 @@ export default function QuestionsPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={closeEditModal}>
                     <div
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+                        className="bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
                     >
                         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="size-9 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[20px]">edit</span>
+                                <div className="size-9 rounded-md bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-[20px]">edit</span>
                                 </div>
                                 <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">Edit Question</h2>
                             </div>
@@ -1014,7 +1053,7 @@ export default function QuestionsPage() {
                             <div className="space-y-1">
                                 <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Question Body</label>
                                 <textarea name="text" value={editForm.text} onChange={handleEditChange} required rows={3}
-                                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none resize-none"
+                                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none resize-none"
                                 />
                             </div>
 
@@ -1023,7 +1062,7 @@ export default function QuestionsPage() {
                                     Question Image <span className="normal-case font-medium text-slate-400">(optional)</span>
                                 </label>
                                 {editForm.imageUrl ? (
-                                    <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                                    <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                                         <img src={editForm.imageUrl} alt="Question" className="w-full max-h-48 object-contain p-2" />
                                         <button
                                             type="button"
@@ -1034,15 +1073,15 @@ export default function QuestionsPage() {
                                         </button>
                                     </div>
                                 ) : (
-                                    <label className={`flex flex-col items-center justify-center gap-2 w-full py-6 rounded-2xl border-2 border-dashed cursor-pointer transition-all
+                                    <label className={`flex flex-col items-center justify-center gap-2 w-full py-6 rounded-lg border-2 border-dashed cursor-pointer transition-all
                                         ${editImageUploading
-                                            ? 'border-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5'
-                                            : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5'
+                                            ? 'border-orange-300 bg-orange-50/50 dark:bg-orange-500/5'
+                                            : 'border-slate-200 dark:border-slate-700 hover:border-orange-400 hover:bg-orange-50/30 dark:hover:bg-orange-500/5'
                                         }`}>
                                         {editImageUploading ? (
                                             <>
-                                                <div className="animate-spin size-6 border-[3px] border-indigo-500 border-t-transparent rounded-full"></div>
-                                                <span className="text-xs font-bold text-indigo-500">Uploading...</span>
+                                                <div className="animate-spin size-6 border-[3px] border-orange-500 border-t-transparent rounded-full"></div>
+                                                <span className="text-xs font-bold text-orange-500">Uploading...</span>
                                             </>
                                         ) : (
                                             <>
@@ -1066,7 +1105,7 @@ export default function QuestionsPage() {
                                 <div className="space-y-1">
                                     <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Board</label>
                                     <select name="board" value={editForm.board} onChange={handleEditChange}
-                                        className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
+                                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none appearance-none">
                                         <option value="General">General</option>
                                         <option value="CBSE">CBSE</option>
                                         <option value="ICSE">ICSE</option>
@@ -1076,7 +1115,7 @@ export default function QuestionsPage() {
                                 <div className="space-y-1">
                                     <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Class</label>
                                     <select name="class" value={editForm.class} onChange={handleEditChange}
-                                        className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
+                                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none appearance-none">
                                         <option value="General">General</option>
                                         <option value="Class 5">Class 5</option>
                                         <option value="Class 6">Class 6</option>
@@ -1094,12 +1133,12 @@ export default function QuestionsPage() {
                                 <div className="space-y-1">
                                     <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Subject</label>
                                     <input name="subject" value={editForm.subject} onChange={handleEditChange} required
-                                        className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none" />
+                                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Difficulty</label>
                                     <select name="difficulty" value={editForm.difficulty} onChange={handleEditChange}
-                                        className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
+                                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none appearance-none">
                                         <option value="easy">Easy</option>
                                         <option value="medium">Medium</option>
                                         <option value="hard">Hard</option>
@@ -1119,13 +1158,13 @@ export default function QuestionsPage() {
                                             key={value}
                                             type="button"
                                             onClick={() => handleEditChange({ target: { name: "type", value } })}
-                                            className={`flex flex-col items-center gap-1 py-3 px-2 rounded-2xl border-2 font-black text-[11px] transition-all ${editForm.type === value
-                                                ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                                : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-indigo-300'}`}
+                                            className={`flex flex-col items-center gap-1 py-3 px-2 rounded-lg border-2 font-black text-[11px] transition-all ${editForm.type === value
+                                                ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400'
+                                                : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-orange-300'}`}
                                         >
                                             <span className="material-symbols-outlined text-[20px]">{icon}</span>
                                             <span className="uppercase tracking-widest text-center leading-tight">{label}</span>
-                                            <span className={`text-[9px] font-medium normal-case ${editForm.type === value ? 'text-indigo-400' : 'text-slate-400'}`}>{desc}</span>
+                                            <span className={`text-[9px] font-medium normal-case ${editForm.type === value ? 'text-orange-400' : 'text-slate-400'}`}>{desc}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -1137,7 +1176,7 @@ export default function QuestionsPage() {
                                         <div key={opt.label} className="flex items-center gap-3">
                                             <span className="size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0 uppercase tracking-tighter">{opt.label}</span>
                                             <input value={opt.value} onChange={(e) => handleEditOptionChange(idx, e.target.value)} required
-                                                className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2 text-xs font-bold focus:border-indigo-500 transition-all outline-none"
+                                                className="flex-1 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2 text-xs font-bold focus:border-orange-500 transition-all outline-none"
                                                 placeholder={`Content for Option ${opt.label}`} />
                                         </div>
                                     ))}
@@ -1149,13 +1188,13 @@ export default function QuestionsPage() {
                                     {editForm.options.map((opt, idx) => {
                                         const uploading = editOptionImageUploadingIdx === idx;
                                         return (
-                                            <div key={opt.label} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2 space-y-2">
+                                            <div key={opt.label} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2 space-y-2">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="size-7 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-[11px] font-black text-indigo-600 dark:text-indigo-400 shrink-0">{opt.label}</span>
+                                                    <span className="size-7 rounded-lg bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-[11px] font-black text-orange-600 dark:text-orange-400 shrink-0">{opt.label}</span>
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Option {opt.label}</span>
                                                 </div>
                                                 {opt.value ? (
-                                                    <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                                                    <div className="relative rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
                                                         <img src={opt.value} alt={`Option ${opt.label}`} className="w-full h-28 object-contain p-1" />
                                                         <button
                                                             type="button"
@@ -1166,15 +1205,15 @@ export default function QuestionsPage() {
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    <label className={`flex flex-col items-center justify-center gap-1 w-full h-28 rounded-xl border-2 border-dashed cursor-pointer transition-all
+                                                    <label className={`flex flex-col items-center justify-center gap-1 w-full h-28 rounded-md border-2 border-dashed cursor-pointer transition-all
                                                         ${uploading
-                                                            ? 'border-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5'
-                                                            : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5'
+                                                            ? 'border-orange-300 bg-orange-50/50 dark:bg-orange-500/5'
+                                                            : 'border-slate-200 dark:border-slate-700 hover:border-orange-400 hover:bg-orange-50/30 dark:hover:bg-orange-500/5'
                                                         }`}>
                                                         {uploading ? (
                                                             <>
-                                                                <div className="animate-spin size-5 border-[3px] border-indigo-500 border-t-transparent rounded-full"></div>
-                                                                <span className="text-[10px] font-bold text-indigo-500">Uploading...</span>
+                                                                <div className="animate-spin size-5 border-[3px] border-orange-500 border-t-transparent rounded-full"></div>
+                                                                <span className="text-[10px] font-bold text-orange-500">Uploading...</span>
                                                             </>
                                                         ) : (
                                                             <>
@@ -1203,7 +1242,7 @@ export default function QuestionsPage() {
                                     <div className="flex gap-2">
                                         {['A', 'B', 'C', 'D'].map(label => (
                                             <button key={label} type="button" onClick={() => setEditForm(prev => ({ ...prev, correctAnswer: label }))}
-                                                className={`flex-1 py-3 rounded-xl border-2 font-black text-sm transition-all ${editForm.correctAnswer === label ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-emerald-300'}`}>
+                                                className={`flex-1 py-3 rounded-md border-2 font-black text-sm transition-all ${editForm.correctAnswer === label ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-emerald-300'}`}>
                                                 {label}
                                             </button>
                                         ))}
@@ -1214,7 +1253,7 @@ export default function QuestionsPage() {
                                         value={editForm.correctAnswer}
                                         onChange={handleEditChange}
                                         required
-                                        className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none"
                                         placeholder="e.g. 42 or Paris (exact match)"
                                     />
                                 )}
@@ -1226,7 +1265,7 @@ export default function QuestionsPage() {
                                 type="button"
                                 onClick={closeEditModal}
                                 disabled={editSaving}
-                                className="px-5 py-2.5 rounded-xl text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-40"
+                                className="px-5 py-2.5 rounded-md text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-40"
                             >
                                 Cancel
                             </button>
@@ -1234,7 +1273,7 @@ export default function QuestionsPage() {
                                 type="button"
                                 onClick={handleEditSubmit}
                                 disabled={editSaving}
-                                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-60 flex items-center gap-2"
+                                className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-md font-black text-sm shadow-lg shadow-orange-500/20 transition-all disabled:opacity-60 flex items-center gap-2"
                             >
                                 {editSaving && (
                                     <span className="material-symbols-outlined text-[16px] animate-spin">sync</span>

@@ -73,9 +73,9 @@ export default function ReferralsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Form to Add New Referral */}
                 <div className="lg:col-span-1">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm sticky top-24">
+                    <div className="bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 p-6 shadow-sm sticky top-24">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="size-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                            <div className="size-10 rounded-md bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
                                 <span className="material-symbols-outlined text-xl">add_box</span>
                             </div>
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Code</h2>
@@ -92,7 +92,7 @@ export default function ReferralsPage() {
                                     placeholder="e.g. SCHOOL2026"
                                     value={newReferral.code}
                                     onChange={(e) => setNewReferral({ ...newReferral, code: e.target.value.toUpperCase() })}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 uppercase"
+                                    className="w-full px-4 py-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 uppercase"
                                 />
                             </div>
                             <div>
@@ -105,7 +105,7 @@ export default function ReferralsPage() {
                                     placeholder="e.g. Springfield High"
                                     value={newReferral.schoolName}
                                     onChange={(e) => setNewReferral({ ...newReferral, schoolName: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                    className="w-full px-4 py-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50"
                                 />
                             </div>
                             <div>
@@ -115,7 +115,7 @@ export default function ReferralsPage() {
                                 <select
                                     value={newReferral.paymentType}
                                     onChange={(e) => setNewReferral({ ...newReferral, paymentType: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                    className="w-full px-4 py-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50"
                                 >
                                     <option value="offline">Offline</option>
                                     <option value="online">Online</option>
@@ -124,7 +124,7 @@ export default function ReferralsPage() {
                             <button
                                 type="submit"
                                 disabled={isCreating}
-                                className="w-full py-3.5 mt-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                                className="w-full py-3.5 mt-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-bold shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
                             >
                                 {isCreating ? (
                                     <div className="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -141,7 +141,7 @@ export default function ReferralsPage() {
 
                 {/* Referral List */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                 <span className="material-symbols-outlined text-indigo-500">list_alt</span>
@@ -220,7 +220,7 @@ export default function ReferralsPage() {
                                                 <td className="p-4 text-right">
                                                     <button
                                                         onClick={() => handleToggleStatus(ref._id, ref.isActive)}
-                                                        className={`p-2 rounded-xl border text-sm font-bold flex items-center justify-center size-9 ml-auto transition-all ${
+                                                        className={`p-2 rounded-md border text-sm font-bold flex items-center justify-center size-9 ml-auto transition-all ${
                                                             ref.isActive 
                                                             ? "text-red-600 border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-300 dark:border-red-500/20 dark:bg-red-500/10 dark:hover:bg-red-500/20" 
                                                             : "text-emerald-600 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20"
@@ -245,7 +245,7 @@ export default function ReferralsPage() {
             {/* Share Modal */}
             {shareModal.isOpen && shareModal.referral && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-md p-6 sm:p-8 max-w-md w-full shadow-2xl relative border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
                         <button 
                             onClick={() => setShareModal({ isOpen: false, referral: null })}
                             className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
@@ -257,18 +257,18 @@ export default function ReferralsPage() {
                             <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                                 {shareModal.referral.schoolName} ({shareModal.referral.code})
                             </p>
-                            <div className="flex justify-center py-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl mx-auto items-center">
+                            <div className="flex justify-center py-6 bg-slate-50 dark:bg-slate-800/50 rounded-lg mx-auto items-center">
                                 <img 
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin + '/register?ref=' + shareModal.referral.code)}`} 
                                     alt="QR Code" 
-                                    className="rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 size-48 bg-white p-2"
+                                    className="rounded-md shadow-lg border border-slate-200 dark:border-slate-700 size-48 bg-white p-2"
                                 />
                             </div>
                             <div>
                                 <input 
                                     readOnly 
                                     value={`${window.location.origin}/register?ref=${shareModal.referral.code}`}
-                                    className="w-full text-center px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-700 outline-none select-all focus:ring-2 focus:ring-indigo-500/50"
+                                    className="w-full text-center px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm font-medium rounded-md border border-slate-200 dark:border-slate-700 outline-none select-all focus:ring-2 focus:ring-indigo-500/50"
                                 />
                             </div>
                             <button 
@@ -276,7 +276,7 @@ export default function ReferralsPage() {
                                     navigator.clipboard.writeText(`${window.location.origin}/register?ref=${shareModal.referral.code}`);
                                     showToast("Link copied to clipboard!", "success");
                                 }}
-                                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-md shadow-indigo-500/20 flex justify-center items-center gap-2"
+                                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-md transition-all shadow-md shadow-indigo-500/20 flex justify-center items-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-[20px]">content_copy</span>
                                 Copy Link

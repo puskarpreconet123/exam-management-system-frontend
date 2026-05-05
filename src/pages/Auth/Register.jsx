@@ -120,13 +120,13 @@ export default function Register() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 md:p-6 transition-colors duration-300">
+        <div className="min-h-screen flex items-center justify-center bg-[#fffbf5] dark:bg-slate-900 md:p-6 transition-colors duration-300">
             {/* Using a max-w-6xl container with height limit for smooth scrolling inside */}
             <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-5 bg-white dark:bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 md:h-[90vh]">
 
                 {/* Left Side: Branding (Sticky/Fixed visually if right side scrolls) */}
-                <div className="hidden md:flex flex-col justify-center p-12 bg-indigo-600 text-white relative overflow-hidden md:col-span-2">
-                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500 rounded-full opacity-20" />
+                <div className="hidden md:flex flex-col justify-center p-12 bg-orange-600 text-white relative overflow-hidden md:col-span-2">
+                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-orange-500 rounded-full opacity-20" />
                     <div className="relative z-10">
                         <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/30">
                             <ShieldCheck size={32} className="text-white" />
@@ -134,7 +134,7 @@ export default function Register() {
                         <h1 className="text-4xl font-extrabold mb-6 leading-tight">
                             Secure Enterprise <br /> Exam Portal
                         </h1>
-                        <p className="text-indigo-100 text-lg mb-10 max-w-sm">
+                        <p className="text-orange-100 text-lg mb-10 max-w-sm">
                             Join thousands of students and start your certification journey today.
                         </p>
                         <div className="flex items-center gap-4">
@@ -147,7 +147,7 @@ export default function Register() {
                 {/* Right Side: Form (Scrollable area) */}
                 <div className="p-8 md:p-12 bg-white dark:bg-slate-950 md:col-span-3 overflow-y-auto custom-scrollbar">
                     <div className="mb-8 border-b border-slate-200 dark:border-slate-800 pb-6">
-                        <Link to="/login" className="inline-flex items-center text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 mb-4 transition-colors">
+                        <Link to="/login" className="inline-flex items-center text-sm font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 mb-4 transition-colors">
                             &larr; Back to Login
                         </Link>
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
@@ -168,7 +168,7 @@ export default function Register() {
                         {/* 1. Student Details Section */}
                         <div className="space-y-6">
                             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                                <User className="text-indigo-500" size={20} /> Student Details
+                                <User className="text-orange-500" size={20} /> Student Details
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormInput label="Student's Name *" icon={User} name="studentName" value={formData.studentName} onChange={handleInputChange} required />
@@ -181,16 +181,16 @@ export default function Register() {
                                     <label className="text-sm font-semibold ml-1 text-slate-700 dark:text-slate-300">Student Contact No *</label>
                                     <div className="flex gap-2">
                                         <div className="relative group flex-1">
-                                            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
-                                            <input type="tel" name="studentContact" value={formData.studentContact} onChange={(e) => { handleInputChange(e); setPhoneVerified(false); setPhoneOtpSent(false); }} disabled={phoneVerified} required className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-900 dark:text-white disabled:opacity-60" placeholder="10-digit number" />
+                                            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors" size={18} />
+                                            <input type="tel" name="studentContact" value={formData.studentContact} onChange={(e) => { handleInputChange(e); setPhoneVerified(false); setPhoneOtpSent(false); }} disabled={phoneVerified} required className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white disabled:opacity-60" placeholder="10-digit number" />
                                         </div>
                                         {phoneOtpSent && !phoneVerified ? (
                                             <div className="flex gap-2 w-48">
                                                 <input type="text" value={phoneOtp} onChange={(e) => setPhoneOtp(e.target.value)} className="w-full px-3 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-2xl outline-none" placeholder="OTP" />
-                                                <button type="button" onClick={handleVerifyPhoneOtp} className="px-4 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition">Verify</button>
+                                                <button type="button" onClick={handleVerifyPhoneOtp} className="px-4 py-3.5 bg-orange-600 text-white rounded-2xl font-bold hover:bg-orange-700 transition">Verify</button>
                                             </div>
                                         ) : (
-                                            <button type="button" onClick={handleSendPhoneOtp} disabled={phoneVerified || !formData.studentContact} className={`px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${phoneVerified ? 'bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800 disabled:opacity-50'}`}>
+                                            <button type="button" onClick={handleSendPhoneOtp} disabled={phoneVerified || !formData.studentContact} className={`px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${phoneVerified ? 'bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : 'bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800 disabled:opacity-50'}`}>
                                                 {phoneVerified ? <><CheckCircle size={16} /> Verified</> : "Send OTP"}
                                             </button>
                                         )}
@@ -201,16 +201,16 @@ export default function Register() {
                                     <label className="text-sm font-semibold ml-1 text-slate-700 dark:text-slate-300">Email Address *</label>
                                     <div className="flex gap-2">
                                         <div className="relative group flex-1">
-                                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
-                                            <input type="email" name="email" value={formData.email} onChange={(e) => { handleInputChange(e); setEmailVerified(false); setEmailOtpSent(false); }} disabled={emailVerified} required className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-900 dark:text-white disabled:opacity-60" placeholder="student@example.com" />
+                                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors" size={18} />
+                                            <input type="email" name="email" value={formData.email} onChange={(e) => { handleInputChange(e); setEmailVerified(false); setEmailOtpSent(false); }} disabled={emailVerified} required className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white disabled:opacity-60" placeholder="student@example.com" />
                                         </div>
                                         {emailOtpSent && !emailVerified ? (
                                             <div className="flex gap-2 w-48">
                                                 <input type="text" value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} className="w-full px-3 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-2xl outline-none" placeholder="OTP" />
-                                                <button type="button" onClick={handleVerifyEmailOtp} className="px-4 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition">Verify</button>
+                                                <button type="button" onClick={handleVerifyEmailOtp} className="px-4 py-3.5 bg-orange-600 text-white rounded-2xl font-bold hover:bg-orange-700 transition">Verify</button>
                                             </div>
                                         ) : (
-                                            <button type="button" onClick={handleSendEmailOtp} disabled={emailVerified || !formData.email} className={`px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${emailVerified ? 'bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800 disabled:opacity-50'}`}>
+                                            <button type="button" onClick={handleSendEmailOtp} disabled={emailVerified || !formData.email} className={`px-4 py-3.5 rounded-2xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${emailVerified ? 'bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : 'bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800 disabled:opacity-50'}`}>
                                                 {emailVerified ? <><CheckCircle size={16} /> Verified</> : "Send OTP"}
                                             </button>
                                         )}
@@ -225,7 +225,7 @@ export default function Register() {
                         {/* 2. Guardian Details Section */}
                         <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
                             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                                <ShieldCheck className="text-indigo-500" size={20} /> Guardian Details
+                                <ShieldCheck className="text-orange-500" size={20} /> Guardian Details
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormInput label="Guardian's Name *" icon={User} name="guardianName" value={formData.guardianName} onChange={handleInputChange} required />
@@ -237,7 +237,7 @@ export default function Register() {
                         {/* 3. Address Section */}
                         <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
                             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                                <Map className="text-indigo-500" size={20} /> Address Section
+                                <Map className="text-orange-500" size={20} /> Address Section
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormInput label="Country" icon={Navigation} name="country" value={formData.country}  onClick={()=>showToast("This System Built Only For Indian Student")} readOnly disabled />
@@ -256,7 +256,7 @@ export default function Register() {
                                     />
                                     {formData.state === 'Other' && (
                                         <div className="animate-in fade-in slide-in-from-top-2">
-                                            <input type="text" name="customState" value={formData.customState} onChange={handleInputChange} required className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-900 dark:text-white" placeholder="Type State Name" />
+                                            <input type="text" name="customState" value={formData.customState} onChange={handleInputChange} required className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white" placeholder="Type State Name" />
                                         </div>
                                     )}
                                 </div>
@@ -265,7 +265,7 @@ export default function Register() {
                                     {formData.state === 'Other' ? (
                                         <div className="space-y-2">
                                             <label className="text-sm font-semibold ml-1 text-slate-700 dark:text-slate-300">District *</label>
-                                            <input type="text" name="customDistrict" value={formData.customDistrict} onChange={handleInputChange} required className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-900 dark:text-white" placeholder="Type District Name" />
+                                            <input type="text" name="customDistrict" value={formData.customDistrict} onChange={handleInputChange} required className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white" placeholder="Type District Name" />
                                         </div>
                                     ) : (
                                         <>
@@ -284,7 +284,7 @@ export default function Register() {
                                             />
                                             {formData.district === 'Other' && (
                                                 <div className="animate-in fade-in slide-in-from-top-2">
-                                                    <input type="text" name="customDistrict" value={formData.customDistrict} onChange={handleInputChange} required className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-900 dark:text-white" placeholder="Type District Name" />
+                                                    <input type="text" name="customDistrict" value={formData.customDistrict} onChange={handleInputChange} required className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white" placeholder="Type District Name" />
                                                 </div>
                                             )}
                                         </>
@@ -299,19 +299,19 @@ export default function Register() {
                         {/* 4. Referral Code */}
                         <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
                             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                                <User className="text-indigo-500" size={20} /> Referral
+                                <User className="text-orange-500" size={20} /> Referral
                             </h3>
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold ml-1 text-slate-700 dark:text-slate-300">Referral Code (Optional)</label>
                                 <div className="flex gap-2">
                                     <div className="relative group flex-1">
-                                        <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                                        <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors" size={18} />
                                         <input
                                             type="text"
                                             name="referralCode"
                                             value={formData.referralCode}
                                             onChange={handleInputChange}
-                                            className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-900 dark:text-white uppercase disabled:opacity-70 disabled:bg-slate-100"
+                                            className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white uppercase disabled:opacity-70 disabled:bg-slate-100"
                                             placeholder="Got a code?"
                                         />
                                     </div>
@@ -322,21 +322,21 @@ export default function Register() {
                         {/* 5. Payment Section */}
                         <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-2">
                             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                                <CreditCard className="text-indigo-500" size={20} /> Payment Options
+                                <CreditCard className="text-orange-500" size={20} /> Payment Options
                             </h3>
 
                             <div className="flex gap-4 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl max-w-sm">
-                                <button type="button" onClick={() => setFormData({ ...formData, paymentType: 'pay_now' })} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${formData.paymentType === 'pay_now' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>
+                                <button type="button" onClick={() => setFormData({ ...formData, paymentType: 'pay_now' })} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${formData.paymentType === 'pay_now' ? 'bg-orange-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>
                                     Pay Now
                                 </button>
-                                <button type="button" onClick={() => setFormData({ ...formData, paymentType: 'pay_later' })} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${formData.paymentType === 'pay_later' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>
+                                <button type="button" onClick={() => setFormData({ ...formData, paymentType: 'pay_later' })} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${formData.paymentType === 'pay_later' ? 'bg-orange-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}>
                                     Pay Later
                                 </button>
                             </div>
 
                             {formData.paymentType === 'pay_now' && (
                                 <div className="animate-in slide-in-from-top-4 fade-in duration-300 transform origin-top">
-                                    <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl mb-4 text-sm text-indigo-800 dark:text-indigo-200 border border-indigo-100 dark:border-indigo-800/50 flex flex-col gap-1">
+                                    <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-2xl mb-4 text-sm text-orange-800 dark:text-orange-200 border border-orange-100 dark:border-orange-800/50 flex flex-col gap-1">
                                         <span>Please complete your payment to the institute bank or UPI account.</span>
                                         <span className="font-bold">UPI ID: exam@institute | Amount: ₹500</span>
                                     </div>
@@ -345,7 +345,7 @@ export default function Register() {
                             )}
                         </div>
 
-                        <button type="submit" disabled={loading} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-2xl font-bold shadow-xl shadow-indigo-500/25 flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all mt-8 text-lg">
+                        <button type="submit" disabled={loading} className="w-full py-4 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white rounded-2xl font-bold shadow-xl shadow-orange-500/25 flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all mt-8 text-lg">
                             {loading ? <Loader2 className="animate-spin" size={20} /> : "Create Account"}
                             {!loading && <ArrowRight size={20} />}
                         </button>
@@ -379,9 +379,9 @@ function FormInput({ label, icon: Icon, className = '', disabled, ...props }) {
         <div className={`space-y-2 ${className}`}>
             <label className="text-sm font-semibold ml-1 text-slate-700 dark:text-slate-300">{label}</label>
             <div className="relative group">
-                {Icon && <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors " size={18} />}
+                {Icon && <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors " size={18} />}
                 <input
-                    className={`w-full ${Icon ? 'pl-11' : 'pl-4'} pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-900 dark:text-white read-only:bg-slate-100 dark:read-only:bg-slate-800 ${disabled 
+                    className={`w-full ${Icon ? 'pl-11' : 'pl-4'} pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white read-only:bg-slate-100 dark:read-only:bg-slate-800 ${disabled 
   ? 'text-slate-400 cursor-not-allowed opacity-70' 
   : ''}`}
                     readOnly={disabled || props.readOnly}
@@ -412,7 +412,7 @@ function FormDropdown({ label, icon: Icon, options, value, onChange, name, requi
         <div className={`space-y-2 ${className}`} ref={dropdownRef}>
             <label className="text-sm font-semibold ml-1 text-slate-700 dark:text-slate-300">{label}</label>
             <div className="relative group">
-                {Icon && <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors z-10" size={18} />}
+                {Icon && <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors z-10" size={18} />}
 
                 {/* Visually hidden input for tracking form submission state and native required validation */}
                 <input
@@ -434,7 +434,7 @@ function FormDropdown({ label, icon: Icon, options, value, onChange, name, requi
                             setIsOpen(!isOpen);
                         }
                     }}
-                    className={`w-full text-left ${Icon ? 'pl-11' : 'pl-4'} pr-10 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${disabled ? 'opacity-50 cursor-not-allowed text-slate-500 dark:text-slate-500' : value ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}
+                    className={`w-full text-left ${Icon ? 'pl-11' : 'pl-4'} pr-10 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all ${disabled ? 'opacity-50 cursor-not-allowed text-slate-500 dark:text-slate-500' : value ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}
                 >
                     {selectedLabel}
                     <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
@@ -456,7 +456,7 @@ function FormDropdown({ label, icon: Icon, options, value, onChange, name, requi
                                         onChange({ target: { name, value: opt.value } });
                                         setIsOpen(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${value === opt.value ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${value === opt.value ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                 >
                                     {opt.label}
                                 </button>

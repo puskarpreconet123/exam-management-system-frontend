@@ -30,7 +30,7 @@ export default function ResultDetails() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900">
-                <div className="animate-spin rounded-full size-12 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full size-12 border-b-2 border-orange-600"></div>
             </div>
         );
     }
@@ -41,7 +41,7 @@ export default function ResultDetails() {
                 <span className="material-symbols-outlined text-red-500 text-6xl">error</span>
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Access Denied / Error</h2>
                 <p className="text-slate-500 max-w-md">{error}</p>
-                <button onClick={() => navigate('/results')} className="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                <button onClick={() => navigate('/results')} className="mt-4 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
                     Back to Results
                 </button>
             </div>
@@ -78,7 +78,7 @@ export default function ResultDetails() {
 
                     <div className="text-center md:text-left">
                         <h2 className="text-xs md:text-sm uppercase tracking-wider text-slate-500 font-semibold mb-1">Percentage</h2>
-                        <span className="text-3xl font-bold text-primary">{attempt.percentage}%</span>
+                        <span className="text-3xl font-bold text-orange-600">{attempt.percentage}%</span>
                     </div>
 
                     <div className="h-12 w-px bg-slate-200 dark:bg-slate-800 hidden md:block"></div>
@@ -94,7 +94,7 @@ export default function ResultDetails() {
                 {/* Questions Section */}
                 <div className="space-y-6 pb-12">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary">analytics</span>
+                        <span className="material-symbols-outlined text-orange-600">analytics</span>
                         Question Breakdown
                     </h3>
                     {questions.map((q, index) => {

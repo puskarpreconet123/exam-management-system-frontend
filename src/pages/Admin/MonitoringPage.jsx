@@ -10,6 +10,11 @@ export default function MonitoringPage() {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [forcingId, setForcingId] = useState('');
+    const [exams, setExams] = useState([]);
+    const [selectedExamId, setSelectedExamId] = useState('');
+    const [selectedLogs, setSelectedLogs] = useState([]);
+    const [isBulkForcing, setIsBulkForcing] = useState(false);
+    const [isBulkDismissing, setIsBulkDismissing] = useState(false);
 
     // Pagination state
     const [page, setPage] = useState(1);
@@ -21,13 +26,26 @@ export default function MonitoringPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [attemptLogs, setAttemptLogs] = useState([]);
 
-    const loadLogs = async (pageNum = page, currentLimit = limit) => {
+    const [stats, setStats] = useState({
+        mostCommon: 'N/A',
+        mostCommonPercent: '0%',
+        peakTime: 'N/A',
+        forceTerminations: 0
+    });
+
+    const loadLogs = async (pageNum = page, currentLimit = limit, examFilter = selectedExamId) => {
         setLoading(true);
         try {
-            const { data } = await api.get(`/admin/suspicious?page=${pageNum}&limit=${currentLimit}`);
+            let url = `/admin/suspicious?page=${pageNum}&limit=${currentLimit}`;
+            if (examFilter) url += `&examId=${examFilter}`;
+            
+            const { data } = await api.get(url);
             setLogs(data.data || []);
             setTotalPages(data.pages || 1);
             setPage(pageNum);
+            if (data.stats) {
+                setStats(data.stats);
+            }
         } catch (err) {
             showToast('Failed to load integrity logs', 'error');
         } finally {
@@ -35,8 +53,18 @@ export default function MonitoringPage() {
         }
     };
 
+    const loadExams = async () => {
+        try {
+            const { data } = await api.get('/admin/exams/simple');
+            setExams(data || []);
+        } catch (err) {
+            console.error("Failed to load exams", err);
+        }
+    };
+
     useEffect(() => {
         loadLogs();
+        loadExams();
 
         const socket = io(SOCKET_URL, {
             transports: ['websocket', 'polling'],
@@ -107,6 +135,59 @@ export default function MonitoringPage() {
         }
     };
 
+    const handleBulkForceSubmit = async () => {
+        if (selectedLogs.length === 0) return;
+        const attemptIds = logs
+            .filter(log => selectedLogs.includes(log._id) && log.attemptId && log.attemptId.status === 'active')
+            .map(log => log.attemptId._id || log.attemptId);
+        
+        if (attemptIds.length === 0) {
+            showToast('No active attempts selected', 'warning');
+            return;
+        }
+
+        setIsBulkForcing(true);
+        try {
+            await api.post('/admin/force-submit-bulk', { attemptIds });
+            showToast(`Forcefully terminated ${attemptIds.length} attempts`, 'success');
+            setSelectedLogs([]);
+            await loadLogs(page);
+        } catch (err) {
+            showToast('Bulk termination failed', 'error');
+        } finally {
+            setIsBulkForcing(false);
+        }
+    };
+
+    const handleBulkDismiss = async () => {
+        if (selectedLogs.length === 0) return;
+        setIsBulkDismissing(true);
+        try {
+            await api.post('/admin/suspicious/dismiss-bulk', { logIds: selectedLogs });
+            showToast(`Dismissed ${selectedLogs.length} logs`, 'success');
+            setSelectedLogs([]);
+            await loadLogs(page);
+        } catch (err) {
+            showToast('Bulk dismiss failed', 'error');
+        } finally {
+            setIsBulkDismissing(false);
+        }
+    };
+
+    const toggleLogSelection = (logId) => {
+        setSelectedLogs(prev => 
+            prev.includes(logId) ? prev.filter(id => id !== logId) : [...prev, logId]
+        );
+    };
+
+    const toggleAllLogs = (e) => {
+        if (e.target.checked) {
+            setSelectedLogs(logs.map(log => log._id));
+        } else {
+            setSelectedLogs([]);
+        }
+    };
+
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
@@ -115,13 +196,13 @@ export default function MonitoringPage() {
                     <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Integrity Monitoring</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Real-time oversight of examination security and suspicious behaviors.</p>
                 </div>
-                <div className="flex items-center gap-2 border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 rounded-2xl group transition-all">
+                <div className="flex items-center gap-2 border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 rounded-lg group transition-all">
                     <span className="size-2 bg-emerald-500 rounded-full animate-pulse"></span>
                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Live Feed Active</span>
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div className="px-6 md:px-10 py-6 md:py-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50/30 dark:bg-slate-800/30">
                     <div className="flex items-center gap-4">
                         <span className="material-symbols-outlined text-slate-400">policy</span>
@@ -130,12 +211,30 @@ export default function MonitoringPage() {
 
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-slate-500">Exam:</span>
+                            <select
+                                value={selectedExamId}
+                                onChange={(e) => {
+                                    setSelectedExamId(e.target.value);
+                                    loadLogs(1, limit, e.target.value);
+                                }}
+                                disabled={loading}
+                                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-bold text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 cursor-pointer max-w-[200px]"
+                            >
+                                <option value="">All Exams</option>
+                                {exams.map(exam => (
+                                    <option key={exam._id} value={exam._id}>{exam.title}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-slate-500">Show:</span>
                             <select
                                 value={limit}
                                 onChange={handleLimitChange}
                                 disabled={loading}
-                                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 cursor-pointer"
+                                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-bold text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 cursor-pointer"
                             >
                                 <option value={5}>5</option>
                                 <option value={10}>10</option>
@@ -148,7 +247,7 @@ export default function MonitoringPage() {
                         <button
                             onClick={() => loadLogs(page)}
                             disabled={loading}
-                            className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-all active:scale-90 disabled:opacity-50 flex items-center justify-center"
+                            className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-90 disabled:opacity-50 flex items-center justify-center"
                         >
                             <span className={`material-symbols-outlined text-indigo-600 ${loading ? 'animate-spin' : ''}`}>
                                 {loading ? 'sync' : 'refresh'}
@@ -157,10 +256,45 @@ export default function MonitoringPage() {
                     </div>
                 </div>
 
+                {selectedLogs.length > 0 && (
+                    <div className="px-6 md:px-10 py-3 bg-indigo-50/50 dark:bg-indigo-500/10 border-b border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center gap-3">
+                            <span className="flex size-6 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white">
+                                {selectedLogs.length}
+                            </span>
+                            <span className="text-sm font-bold text-indigo-900 dark:text-indigo-300">Logs Selected</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleBulkDismiss}
+                                disabled={isBulkDismissing}
+                                className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {isBulkDismissing ? 'Dismissing...' : 'Dismiss Flags'}
+                            </button>
+                            <button
+                                onClick={handleBulkForceSubmit}
+                                disabled={isBulkForcing}
+                                className="px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {isBulkForcing ? 'Terminating...' : 'Force Terminate Selected'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+                                <th className="px-6 py-5 w-12 text-center">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={logs.length > 0 && selectedLogs.length === logs.length}
+                                        onChange={toggleAllLogs}
+                                        className="size-4 rounded-sm text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                                    />
+                                </th>
                                 <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Student Profile</th>
                                 <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Violation Type</th>
                                 <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Timestamp</th>
@@ -171,14 +305,14 @@ export default function MonitoringPage() {
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                             {loading && logs.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="p-24 text-center">
+                                    <td colSpan="6" className="p-24 text-center">
                                         <div className="animate-spin size-12 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-6"></div>
                                         <p className="text-sm font-bold text-slate-500">Analyzing System Logs...</p>
                                     </td>
                                 </tr>
                             ) : logs.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="p-24 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
+                                    <td colSpan="6" className="p-24 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
                                         Clean Integrity Record. No violations detected.
                                     </td>
                                 </tr>
@@ -186,17 +320,25 @@ export default function MonitoringPage() {
                                 logs.map((log) => (
                                     <tr
                                         key={log._id}
-                                        className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
+                                        className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer ${selectedLogs.includes(log._id) ? 'bg-indigo-50/30 dark:bg-indigo-500/5' : ''}`}
                                         onClick={(e) => {
                                             // Prevent row click if action button was clicked
-                                            if (!e.target.closest('button')) {
+                                            if (!e.target.closest('button') && e.target.type !== 'checkbox') {
                                                 handleViewDetails(log);
                                             }
                                         }}
                                     >
+                                        <td className="px-6 py-6 text-center" onClick={(e) => e.stopPropagation()}>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={selectedLogs.includes(log._id)}
+                                                onChange={() => toggleLogSelection(log._id)}
+                                                className="size-4 rounded-sm text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                                            />
+                                        </td>
                                         <td className="px-10 py-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="size-12 rounded-2xl bg-linear-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 text-lg">
+                                                <div className="size-12 rounded-lg bg-linear-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 text-lg">
                                                     {log.userId?.name?.charAt(0) || '?'}
                                                 </div>
                                                 <div>
@@ -207,7 +349,7 @@ export default function MonitoringPage() {
                                         </td>
                                         <td className="px-10 py-6">
                                             <div className="flex items-center gap-2">
-                                                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${getViolationStyle(log.type)}`}>
+                                                <span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm ${getViolationStyle(log.type)}`}>
                                                     {log.type.replace('_', ' ')}
                                                 </span>
                                                 {log.count > 1 && (
@@ -245,7 +387,7 @@ export default function MonitoringPage() {
                                                         handleForceSubmit(log.attemptId?._id || log.attemptId);
                                                     }}
                                                     disabled={forcingId === (log.attemptId?._id || log.attemptId) || (log.attemptId?.status && log.attemptId.status !== 'active')}
-                                                    className={`inline-flex items-center gap-2.5 px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 disabled:opacity-50 ${log.attemptId?.status && log.attemptId.status !== 'active'
+                                                    className={`inline-flex items-center gap-2.5 px-6 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 disabled:opacity-50 ${log.attemptId?.status && log.attemptId.status !== 'active'
                                                         ? 'bg-slate-100 text-slate-400 dark:bg-slate-800'
                                                         : 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-600 hover:text-white dark:hover:bg-orange-500'
                                                         }`}
@@ -270,12 +412,12 @@ export default function MonitoringPage() {
                             <button
                                 onClick={() => loadLogs(page - 1)}
                                 disabled={page === 1 || loading}
-                                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 disabled:opacity-50 transition-all hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center"
+                                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-bold text-slate-600 dark:text-slate-300 disabled:opacity-50 transition-all hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center"
                             >
                                 <span className="material-symbols-outlined text-sm">chevron_left</span>
                             </button>
 
-                            <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden p-0.5">
+                            <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md overflow-hidden p-0.5">
                                 {(() => {
                                     let pages = [];
                                     let start = Math.max(1, page - 2);
@@ -302,7 +444,7 @@ export default function MonitoringPage() {
                             <button
                                 onClick={() => loadLogs(page + 1)}
                                 disabled={page === totalPages || loading}
-                                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 disabled:opacity-50 transition-all hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center"
+                                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-bold text-slate-600 dark:text-slate-300 disabled:opacity-50 transition-all hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center"
                             >
                                 <span className="material-symbols-outlined text-sm">chevron_right</span>
                             </button>
@@ -312,9 +454,9 @@ export default function MonitoringPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <LogSummaryCard title="Most Common" value="TAB_SWITCH" sub="42% of violations" icon="tab" color="text-amber-500" />
-                <LogSummaryCard title="Peak Time" value="14:00 - 16:00" sub="UTC Schedule" icon="alarm" color="text-indigo-500" />
-                <LogSummaryCard title="Auto-Terminations" value="12" sub="Last 24 hours" icon="gavel" color="text-rose-500" />
+                <LogSummaryCard title="Most Common" value={stats.mostCommon.replace('_', ' ')} sub={stats.mostCommonPercent} icon="tab" color="text-amber-500" />
+                <LogSummaryCard title="Peak Time" value={stats.peakTime} sub="UTC Schedule" icon="alarm" color="text-indigo-500" />
+                <LogSummaryCard title="Force Terminate" value={stats.forceTerminations} sub="Total Kicks" icon="gavel" color="text-rose-500" />
             </div>
 
             {/* Detailed Attempt Logs Modal */}
@@ -338,11 +480,11 @@ export default function MonitoringPage() {
 
                         <div className="p-8 max-h-[60vh] overflow-y-auto">
                             <div className="flex gap-4 mb-8">
-                                <div className="flex-1 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <div className="flex-1 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-100 dark:border-slate-800">
                                     <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Status</p>
                                     <p className="text-lg font-black text-slate-700 dark:text-slate-200">{selectedAttempt.status}</p>
                                 </div>
-                                <div className="flex-1 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <div className="flex-1 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-100 dark:border-slate-800">
                                     <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-1">Attempt ID</p>
                                     <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{selectedAttempt.attemptId}</p>
                                 </div>
@@ -357,9 +499,9 @@ export default function MonitoringPage() {
                             ) : (
                                 <div className="space-y-3">
                                     {attemptLogs.map(alog => (
-                                        <div key={alog._id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl">
+                                        <div key={alog._id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-lg">
                                             <div className="flex items-center gap-4">
-                                                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${getViolationStyle(alog.type)}`}>
+                                                <span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm ${getViolationStyle(alog.type)}`}>
                                                     {alog.type.replace('_', ' ')}
                                                 </span>
                                                 {alog.count > 1 && (
@@ -396,8 +538,8 @@ const getViolationStyle = (type) => {
 }
 
 const LogSummaryCard = ({ title, value, sub, icon, color }) => (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-4xl border border-slate-200 dark:border-slate-800 flex items-center gap-6">
-        <div className={`size-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center ${color}`}>
+    <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex items-center gap-6">
+        <div className={`size-14 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center ${color}`}>
             <span className="material-symbols-outlined text-3xl">{icon}</span>
         </div>
         <div>

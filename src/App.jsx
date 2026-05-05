@@ -8,54 +8,43 @@ import { ThemeProvider } from './components/ThemeContext';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import MyResults from './pages/MyResults';
 import ResultDetails from './pages/ResultDetails';
-import Settings from './pages/Settings';
 import StudentLayout from './layouts/StudentLayout';
 import AdminLayout from './layouts/AdminLayout';
 import { ToastProvider } from "./context/ToastContext";
-
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import ExamsPage from './pages/Admin/ExamsPage';
 import QuestionsPage from './pages/Admin/QuestionsPage';
 import MonitoringPage from './pages/Admin/MonitoringPage';
 import EvaluationPage from './pages/Admin/EvaluationPage';
 import ReferralsPage from './pages/Admin/ReferralsPage';
-import AdminSettings from './pages/Admin/AdminSettings';
-import UserManagementPage from './pages/Admin/UserManagementPage';
-
+import StudentManagementPage from './pages/Admin/StudentManagementPage';
+import EmployeeManagementPage from './pages/Admin/EmployeeManagementPage';
 import { useEffect } from "react";
 import { useToast } from "./context/ToastContext";
 import { setLogoutHandler, setToastHandler } from "./utils/api";
-
 const InterceptorConnector = () => {
   const { showToast } = useToast();
   const { logout } = useAuth();
-
   useEffect(() => {
     setToastHandler(showToast);
     setLogoutHandler(logout);
   }, [showToast, logout]);
-
   return null;
 };
-
 const ProtectedRoute = ({ children, roles = [] }) => {
   const { user, loading } = useAuth();
-
   if (loading) return (
-    <div className="h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-[#0f172a]">
-      <div className="animate-spin rounded-full size-12 border-b-2 border-primary"></div>
+    <div className="h-screen w-full flex items-center justify-center bg-[#fffcf0] dark:bg-[#0c0a09]">
+      <div className="animate-spin rounded-full size-12 border-b-2 border-orange-500"></div>
     </div>
   );
-
   if (!user) return <Navigate to="/login" replace />;
-
   if (roles.length > 0 && !roles.includes(user.role)) {
-    return <Navigate to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'} replace />;
+    const target = (user.role === 'admin' || user.role === 'employee') ? '/admin/dashboard' : '/dashboard';
+    return <Navigate to={target} replace />;
   }
-
   return children;
 };
-
 function App() {
   return (
     <ThemeProvider>
@@ -67,10 +56,9 @@ function App() {
               {/* Public Route */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-
               {/* Admin Portal Routes */}
               <Route element={
-                <ProtectedRoute roles={["admin"]}>
+                <ProtectedRoute roles={["admin", "employee"]}>
                   <AdminLayout />
                 </ProtectedRoute>
               }>
@@ -80,11 +68,10 @@ function App() {
                 <Route path="/admin/monitoring" element={<MonitoringPage />} />
                 <Route path="/admin/evaluation" element={<EvaluationPage />} />
                 <Route path="/admin/referrals" element={<ReferralsPage />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
-                <Route path="/admin/users" element={<UserManagementPage />} />
+                <Route path="/admin/students" element={<StudentManagementPage />} />
+                <Route path="/admin/employees" element={<EmployeeManagementPage />} />
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               </Route>
-
               {/* Student Portal Routes */}
               <Route element={
                 <ProtectedRoute roles={["student"]}>
@@ -94,10 +81,8 @@ function App() {
                 <Route path="/dashboard" element={<StudentDashboard />} />
                 <Route path="/results" element={<MyResults />} />
                 <Route path="/results/:attemptId" element={<ResultDetails />} />
-                <Route path="/settings" element={<Settings />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Route>
-
               {/* Clean Interface Route (No Sidebar) */}
               <Route path="/exam/:attemptId" element={
                 <ProtectedRoute>

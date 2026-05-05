@@ -1,15 +1,24 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
 
 export default function ExamsPage() {
     const { showToast } = useToast();
+    const navigate = useNavigate();
     const [exams, setExams] = useState([]);
+    const [stats, setStats] = useState({ total: 0, live: 0, upcoming: 0, completed: 0 });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
+    const [activeTab, setActiveTab] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [selectedExam, setSelectedExam] = useState(null);
+    const [activeMenuId, setActiveMenuId] = useState(null);
     const [availableSubjects, setAvailableSubjects] = useState([]);
     const [examSubjects, setExamSubjects] = useState([{ subject: '', count: '' }]);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     const [form, setForm] = useState({
         title: '',
@@ -27,14 +36,11 @@ export default function ExamsPage() {
 
     const loadExams = async () => {
         setLoading(true);
-        setError('');
         try {
-            const [examsRes] = await Promise.all([
-                api.get('/admin/exams')
-            ]);
-            setExams(examsRes.data.data || []);
+            const { data } = await api.get('/admin/exams');
+            setExams(data.data || []);
+            if (data.stats) setStats(data.stats);
         } catch (err) {
-            setError('Failed to load exams');
             showToast('Error fetching exams', 'error');
         } finally {
             setLoading(false);
@@ -100,13 +106,11 @@ export default function ExamsPage() {
             return;
         }
 
-        const validSubjects = examSubjects.filter(s => s.subject && Number(s.count) > 0);
-        if (validSubjects.length !== examSubjects.length) {
-            showToast('Please select a subject and valid count for all added subjects', 'error');
-            return;
-        }
+        const subjectsPayload = examSubjects.filter(s => s.subject && s.count).map(s => ({
+            subject: s.subject,
+            count: Number(s.count)
+        }));
 
-        const subjectsPayload = validSubjects.map(s => ({ subject: s.subject, count: Number(s.count) }));
         const calculatedTotal = subjectsPayload.reduce((sum, s) => sum + s.count, 0);
 
         if (form.schedulingType === 'range' && !form.endTime) {
@@ -114,14 +118,9 @@ export default function ExamsPage() {
             return;
         }
 
-        if (form.schedulingType === 'range' && new Date(form.endTime) <= new Date(form.startTime)) {
-            showToast('End time must be after start time', 'error');
-            return;
-        }
-
         setSaving(true);
         try {
-            await api.post('/admin/exams', {
+            const payload = {
                 title: form.title,
                 board: form.board,
                 class: form.class,
@@ -136,373 +135,546 @@ export default function ExamsPage() {
                 schedulingType: form.schedulingType,
                 startTime: form.startTime,
                 endTime: form.schedulingType === 'range' ? form.endTime : undefined,
-            });
-            showToast('Exam created successfully', 'success');
-            setForm({
-                title: '',
-                board: 'General',
-                class: 'General',
-                totalQuestions: 50,
-                easy: 30,
-                medium: 40,
-                hard: 30,
-                durationMinutes: 60,
-                schedulingType: 'fixed',
-                startTime: '',
-                endTime: '',
-            });
-            setExamSubjects([{ subject: '', count: '' }]);
+            };
+
+            if (selectedExam) {
+                await api.patch(`/admin/exams/${selectedExam._id}`, payload);
+                showToast('Exam updated successfully', 'success');
+            } else {
+                await api.post('/admin/exams', payload);
+                showToast('Exam published successfully!', 'success');
+            }
+
+            resetForm();
+            setIsCreateModalOpen(false);
             loadExams();
         } catch (err) {
-            showToast(err.response?.data?.message || 'Failed to create exam', 'error');
+            showToast(err.response?.data?.message || 'Failed to save exam', 'error');
         } finally {
             setSaving(false);
         }
     };
 
+    const handleDelete = (exam) => {
+        setDeleteTarget(exam);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        try {
+            await api.delete(`/admin/exams/${deleteTarget._id}`);
+            showToast('Exam deleted successfully', 'success');
+            setDeleteTarget(null);
+            loadExams();
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Failed to delete exam', 'error');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const cancelDelete = () => {
+        setDeleteTarget(null);
+    };
+
+    const openEditModal = (exam) => {
+        setSelectedExam(exam);
+        setForm({
+            title: exam.title,
+            board: exam.board,
+            class: exam.class,
+            easy: exam.distribution?.easy || 0,
+            medium: exam.distribution?.medium || 0,
+            hard: exam.distribution?.hard || 0,
+            durationMinutes: exam.duration || 0,
+            schedulingType: exam.schedulingType || 'fixed',
+            startTime: exam.startTime ? new Date(exam.startTime).toISOString().slice(0, 16) : '',
+            endTime: exam.endTime ? new Date(exam.endTime).toISOString().slice(0, 16) : '',
+        });
+        setExamSubjects(exam.subjects?.length ? exam.subjects : [{ subject: '', count: '' }]);
+        setIsCreateModalOpen(true);
+    };
+
+    const handleClone = (exam) => {
+        setForm({
+            title: `Copy of ${exam.title}`,
+            board: exam.board,
+            class: exam.class,
+            easy: exam.distribution?.easy || 0,
+            medium: exam.distribution?.medium || 0,
+            hard: exam.distribution?.hard || 0,
+            durationMinutes: exam.duration || 0,
+            schedulingType: exam.schedulingType || 'fixed',
+            startTime: '',
+            endTime: '',
+        });
+        setExamSubjects(exam.subjects?.length ? exam.subjects : [{ subject: '', count: '' }]);
+        setSelectedExam(null);
+        setIsCreateModalOpen(true);
+        showToast('Exam data cloned. Adjust settings and publish.', 'info');
+    };
+
+    const viewResults = (exam) => {
+        navigate('/admin/evaluation', { state: { examId: exam._id } });
+    };
+
+    const resetForm = () => {
+        setSelectedExam(null);
+        setForm({
+            title: '',
+            board: 'General',
+            class: 'General',
+            easy: 30,
+            medium: 40,
+            hard: 30,
+            durationMinutes: 60,
+            schedulingType: 'fixed',
+            startTime: '',
+            endTime: '',
+        });
+        setExamSubjects([{ subject: '', count: '' }]);
+    };
+
+    const filteredExams = exams.filter(exam => {
+        const matchesSearch = exam.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const now = new Date();
+        const start = new Date(exam.startTime);
+        const end = exam.endTime ? new Date(exam.endTime) : new Date(start.getTime() + (exam.durationMinutes || exam.duration) * 60000);
+
+        const isLive = now >= start && now <= end;
+        const isUpcoming = now < start;
+        const isCompleted = now > end;
+
+        if (activeTab === 'live') return matchesSearch && isLive;
+        if (activeTab === 'scheduled') return matchesSearch && isUpcoming;
+        if (activeTab === 'past') return matchesSearch && isCompleted;
+        return matchesSearch;
+    });
+
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Exams Management</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Design and schedule examinations for your students.</p>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">Design, schedule, and monitor your enterprise examinations.</p>
                 </div>
+                <button
+                    onClick={() => { resetForm(); setIsCreateModalOpen(true); }}
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
+                >
+                    <span className="material-symbols-outlined">add_circle</span>
+                    Create New Exam
+                </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            {/* Stats Dashboard */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <StatCard title="Active Exams" value={stats.live} icon="sensors" color="text-emerald-500" bg="bg-emerald-50 dark:bg-emerald-500/10" />
+                <StatCard title="Scheduled" value={stats.upcoming} icon="calendar_today" color="text-orange-500" bg="bg-orange-50 dark:bg-orange-500/10" />
+                <StatCard title="Completed" value={stats.completed} icon="task_alt" color="text-slate-500" bg="bg-slate-50 dark:bg-slate-500/10" />
+                <StatCard title="Total Volume" value={stats.total} icon="account_tree" color="text-amber-500" bg="bg-amber-50 dark:bg-amber-500/10" />
+            </div>
 
-                {/* Exam List Section */}
-                <div className="lg:col-span-2 space-y-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                            <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">Live &amp; Scheduled</h2>
-                            <span className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full text-[10px] font-black uppercase">
-                                {exams.length} Total
-                            </span>
+            {/* List Header & Controls */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
+                <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-800 space-y-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        {/* Tabs */}
+                        <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit">
+                            {['all', 'live', 'scheduled', 'past'].map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`px-6 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${activeTab === tab
+                                            ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-white shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                        }`}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
                         </div>
 
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                            {loading ? (
-                                <div className="p-12 text-center">
-                                    <div className="animate-spin size-8 border-3 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-                                    <p className="text-sm text-slate-500 font-medium">Fetching exams...</p>
-                                </div>
-                            ) : exams.length === 0 ? (
-                                <div className="p-12 text-center text-slate-500 font-medium">
-                                    No exams found. Use the form to create your first exam.
-                                </div>
-                            ) : (
-                                exams.map((exam) => (
-                                    <div key={exam._id} className="p-6 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group">
-                                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="size-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/10 transition-all">
-                                                    <span className="material-symbols-outlined text-2xl">assignment</span>
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <h4 className="font-bold text-slate-900 dark:text-white text-lg">{exam.title}</h4>
-                                                        {exam.schedulingType === 'range' ? (
-                                                            <span className="inline-flex items-center gap-1 bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide">
-                                                                <span className="material-symbols-outlined text-xs">date_range</span>
-                                                                Time Range
-                                                            </span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center gap-1 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide">
-                                                                <span className="material-symbols-outlined text-xs">schedule</span>
-                                                                Fixed Time
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-1">
-                                                        <span className="flex items-center gap-1 text-indigo-500">
-                                                            <span className="material-symbols-outlined text-[12px]">school</span> {exam.board} / {exam.class}
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <span className="material-symbols-outlined text-sm">schedule</span> {exam.durationMinutes || exam.duration}m
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <span className="material-symbols-outlined text-sm">quiz</span> {exam.totalQuestions} Questions
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="text-right shrink-0">
-                                                {exam.schedulingType === 'range' ? (
-                                                    <>
-                                                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">Available From</p>
-                                                        <p className="text-sm font-black text-slate-700 dark:text-slate-200 mt-0.5">
-                                                            {exam.startTime ? new Date(exam.startTime).toLocaleString("en-IN") : 'Not set'}
-                                                        </p>
-                                                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight mt-2">Until</p>
-                                                        <p className="text-sm font-black text-violet-600 dark:text-violet-400 mt-0.5">
-                                                            {exam.endTime ? new Date(exam.endTime).toLocaleString("en-IN") : 'Not set'}
-                                                        </p>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">Starts At</p>
-                                                        <p className="text-sm font-black text-slate-700 dark:text-slate-200 mt-0.5">
-                                                            {exam.startTime ? new Date(exam.startTime).toLocaleString("en-IN") : 'Not set'}
-                                                        </p>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Difficulty Visualization */}
-                                        <div className="mt-4 flex items-center gap-2">
-                                            <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex">
-                                                <div style={{ width: `${exam.distribution?.easy}%` }} className="h-full bg-emerald-500 opacity-70"></div>
-                                                <div style={{ width: `${exam.distribution?.medium}%` }} className="h-full bg-amber-500 opacity-70"></div>
-                                                <div style={{ width: `${exam.distribution?.hard}%` }} className="h-full bg-rose-500 opacity-70"></div>
-                                            </div>
-                                            <span className="text-[10px] font-black text-slate-400 uppercase">Dist.</span>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Create Exam Form */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none p-6 md:p-8 sticky top-24">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="size-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-                            <span className="material-symbols-outlined text-xl">add_task</span>
-                        </div>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Design New Exam</h2>
-                    </div>
-
-                    <form onSubmit={handleCreate} className="space-y-4">
-                        {/* Title */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Exam Title</label>
-                            <input
-                                name="title"
-                                value={form.title}
-                                onChange={handleChange}
-                                required
-                                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
-                                placeholder="e.g. Science Mid-term 2024"
-                            />
-                        </div>
-
-                        {/* Board & Class */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Board</label>
-                                <select name="board" value={form.board} onChange={handleChange}
-                                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
-                                    <option value="General">General</option>
-                                    <option value="CBSE">CBSE</option>
-                                    <option value="ICSE">ICSE</option>
-                                    <option value="State Board">State Board</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Class</label>
-                                <select name="class" value={form.class} onChange={handleChange}
-                                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none appearance-none">
-                                    <option value="General">General</option>
-                                    <option value="Class 5">Class 5</option>
-                                    <option value="Class 6">Class 6</option>
-                                    <option value="Class 7">Class 7</option>
-                                    <option value="Class 8">Class 8</option>
-                                    <option value="Class 9">Class 9</option>
-                                    <option value="Class 10">Class 10</option>
-                                    <option value="Class 11">Class 11</option>
-                                    <option value="Class 12">Class 12</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Subjects + Duration */}
-                        <div className="grid grid-cols-1 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Duration (min)</label>
+                        {/* Search & Bulk Actions */}
+                        <div className="flex items-center gap-3">
+                            <div className="relative flex-1 lg:min-w-[300px]">
+                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
                                 <input
-                                    type="number"
-                                    name="durationMinutes"
-                                    min={1}
-                                    value={form.durationMinutes}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
+                                    type="text"
+                                    placeholder="Search exams by title..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
                                 />
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {/* Subjects */}
-                        <div className="space-y-3 pt-2">
-                            <div className="flex justify-between items-center mb-1">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Subjects & Questions</label>
-                                <span className="text-[10px] font-black rounded-lg px-2 py-0.5 text-indigo-500 bg-indigo-50">
-                                    Total: {examSubjects.reduce((sum, s) => sum + (Number(s.count) || 0), 0)} Qs
-                                </span>
-                            </div>
-                            {examSubjects.map((s, idx) => (
-                                <div key={idx} className="flex gap-2 min-w-0 items-center">
-                                    <select
-                                        value={s.subject}
-                                        onChange={(e) => handleSubjectChange(idx, 'subject', e.target.value)}
-                                        className="flex-1 truncate rounded-2xl border min-w-0 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:border-indigo-500 transition-all outline-none"
-                                    >
-                                        <option value="" disabled>Select Subject</option>
-                                        {availableSubjects.map((asub) => (
-                                            <option key={asub.subject} value={asub.subject}>
-                                                {asub.subject} ({asub.total} available)
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        type="number"
-                                        placeholder="count"
-                                        value={s.count}
-                                        min={1}
-                                        required
-                                        onChange={(e) => handleSubjectChange(idx, 'count', e.target.value)}
-                                        className="w-24 shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
-                                    />
-                                    {examSubjects.length > 1 && (
-                                        <button type="button" onClick={() => handleRemoveSubject(idx)} className="text-rose-500 hover:text-rose-600 p-2 shrink-0">
-                                            <span className="material-symbols-outlined">delete</span>
-                                        </button>
-                                    )}
+                {/* Exam List Body */}
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Exam Details</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Distribution</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Timeline</th>
+                                <th className="px-8 py-5 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="5" className="p-20 text-center">
+                                        <div className="animate-spin size-10 border-4 border-orange-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                                        <p className="text-sm font-bold text-slate-500">Syncing database...</p>
+                                    </td>
+                                </tr>
+                            ) : filteredExams.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="p-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
+                                        No matching records found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredExams.map((exam, index) => {
+                                    const status = getExamStatus(exam);
+                                    const isLastFew = index >= filteredExams.length - 2 && filteredExams.length > 2;
+                                    return (
+                                        <tr key={exam._id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors">
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`size-12 rounded-xl flex items-center justify-center transition-all ${status === 'Live' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                                        <span className="material-symbols-outlined text-2xl">{status === 'Live' ? 'bolt' : 'assignment'}</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">{exam.title}</p>
+                                                        <div className="flex items-center gap-3 mt-0.5">
+                                                            <span className="text-[10px] font-black text-orange-500 uppercase">{exam.board}</span>
+                                                            <span className="size-1 bg-slate-200 dark:bg-slate-700 rounded-full"></span>
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase">{exam.class}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${status === 'Live' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10' : status === 'Upcoming' ? 'bg-orange-50 text-orange-600 dark:bg-orange-500/10' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>
+                                                    {status}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="space-y-2 max-w-[120px]">
+                                                    <div className="flex justify-between text-[9px] font-black uppercase text-slate-400">
+                                                        <span>{exam.totalQuestions} Questions</span>
+                                                        <span>{exam.duration}m</span>
+                                                    </div>
+                                                    <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex">
+                                                        <div style={{ width: `${exam.distribution?.easy || 0}%` }} className="h-full bg-emerald-500"></div>
+                                                        <div style={{ width: `${exam.distribution?.medium || 0}%` }} className="h-full bg-amber-500"></div>
+                                                        <div style={{ width: `${exam.distribution?.hard || 0}%` }} className="h-full bg-rose-500"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{new Date(exam.startTime).toLocaleDateString()}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 mt-0.5">{new Date(exam.startTime).toLocaleTimeString()}</p>
+                                            </td>
+                                            <td className="px-8 py-6 text-right relative">
+                                                <button 
+                                                    onClick={() => setActiveMenuId(activeMenuId === exam._id ? null : exam._id)}
+                                                    className={`p-2 rounded-lg text-slate-400 transition-colors ${activeMenuId === exam._id ? 'bg-slate-100 dark:bg-slate-800 text-orange-600' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                                >
+                                                    <span className="material-symbols-outlined">more_vert</span>
+                                                </button>
+
+                                                {activeMenuId === exam._id && (
+                                                    <>
+                                                        <div className="fixed inset-0 z-10" onClick={() => setActiveMenuId(null)}></div>
+                                                        <div className={`absolute right-8 ${isLastFew ? 'bottom-16' : 'top-16'} w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 z-20 animate-in fade-in zoom-in-95 duration-200`}>
+                                                            <button 
+                                                                onClick={() => { openEditModal(exam); setActiveMenuId(null); }}
+                                                                className="w-full px-4 py-2.5 text-left text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined text-lg text-orange-500">edit</span>
+                                                                Edit Exam
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => { viewResults(exam); setActiveMenuId(null); }}
+                                                                className="w-full px-4 py-2.5 text-left text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined text-lg text-emerald-500">analytics</span>
+                                                                View Results
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => { handleClone(exam); setActiveMenuId(null); }}
+                                                                className="w-full px-4 py-2.5 text-left text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined text-lg text-amber-500">content_copy</span>
+                                                                Clone Exam
+                                                            </button>
+                                                            <div className="my-1 border-t border-slate-100 dark:border-slate-700"></div>
+                                                            <button 
+                                                                onClick={() => { handleDelete(exam); setActiveMenuId(null); }}
+                                                                className="w-full px-4 py-2.5 text-left text-sm font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined text-lg">delete</span>
+                                                                Delete Exam
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Creation Modal */}
+            {isCreateModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300 overflow-y-auto pt-20 pb-20">
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300 my-auto">
+                        <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50 sticky top-0 z-10 backdrop-blur-md">
+                            <div className="flex items-center gap-4">
+                                <div className="size-10 bg-orange-600 rounded-xl flex items-center justify-center text-white">
+                                    <span className="material-symbols-outlined">rocket_launch</span>
                                 </div>
-                            ))}
+                                <div>
+                                    <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                                        {selectedExam ? 'Update Exam' : 'Design New Exam'}
+                                    </h2>
+                                    <p className="text-xs font-bold text-slate-400 mt-1">
+                                        {selectedExam ? `Editing: ${selectedExam.title}` : 'Configure your enterprise assessment'}
+                                    </p>
+                                </div>
+                            </div>
                             <button
-                                type="button"
-                                onClick={() => setExamSubjects(prev => [...prev, { subject: '', count: '' }])}
-                                className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer border-none"
+                                onClick={() => setIsCreateModalOpen(false)}
+                                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-all text-slate-400"
                             >
-                                <span className="material-symbols-outlined text-sm">add</span> Add Subject
+                                <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
 
-                        {/* Difficulty Distribution */}
-                        <div className="space-y-3 pt-2">
-                            <div className="flex justify-between items-center mb-1">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Difficulty Weight (%)</label>
-                                <span className={`text-[10px] font-black rounded-lg px-2 py-0.5 ${form.easy + form.medium + form.hard === 100 ? 'text-emerald-500 bg-emerald-50' : 'text-rose-500 bg-rose-50'}`}>
-                                    {form.easy + form.medium + form.hard}/100
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                <DifficultyInput label="Easy" name="easy" value={form.easy} onChange={handleChange} color="border-emerald-500" />
-                                <DifficultyInput label="Med" name="medium" value={form.medium} onChange={handleChange} color="border-amber-500" />
-                                <DifficultyInput label="Hard" name="hard" value={form.hard} onChange={handleChange} color="border-rose-500" />
-                            </div>
+                        <div className="p-8 max-h-[70vh] overflow-y-auto">
+                            <form onSubmit={handleCreate} className="space-y-6">
+                                <div className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Exam Title</label>
+                                        <input
+                                            name="title"
+                                            value={form.title}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3.5 text-sm font-bold text-slate-900 dark:text-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none"
+                                            placeholder="e.g. Science Mid-term 2024"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Board</label>
+                                            <select name="board" value={form.board} onChange={handleChange} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3.5 text-sm font-bold focus:border-orange-500 transition-all outline-none">
+                                                <option value="General">General</option>
+                                                <option value="CBSE">CBSE</option>
+                                                <option value="ICSE">ICSE</option>
+                                                <option value="State Board">State Board</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Class</label>
+                                            <select name="class" value={form.class} onChange={handleChange} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3.5 text-sm font-bold focus:border-orange-500 transition-all outline-none">
+                                                <option value="General">General</option>
+                                                {['5', '6', '7', '8', '9', '10', '11', '12'].map(c => <option key={c} value={`Class ${c}`}>Class {c}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Subjects Section */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Subjects & Question Counts</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setExamSubjects([...examSubjects, { subject: '', count: '' }])}
+                                                className="text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest flex items-center gap-1 hover:underline"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">add</span>
+                                                Add Subject
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {examSubjects.map((s, idx) => (
+                                                <div key={idx} className="flex gap-2 animate-in slide-in-from-right-2 duration-300">
+                                                    <select
+                                                        value={s.subject}
+                                                        onChange={(e) => handleSubjectChange(idx, 'subject', e.target.value)}
+                                                        className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none"
+                                                    >
+                                                        <option value="">Select Subject</option>
+                                                        {availableSubjects.map(sub => (
+                                                            <option key={sub.subject} value={sub.subject}>{sub.subject} ({sub.total} Qs)</option>
+                                                        ))}
+                                                    </select>
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Qty"
+                                                        value={s.count}
+                                                        onChange={(e) => handleSubjectChange(idx, 'count', e.target.value)}
+                                                        className="w-24 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none"
+                                                    />
+                                                    {examSubjects.length > 1 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveSubject(idx)}
+                                                            className="p-3 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all"
+                                                        >
+                                                            <span className="material-symbols-outlined text-xl">delete</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Duration (min)</label>
+                                            <input type="number" name="durationMinutes" value={form.durationMinutes} onChange={handleChange} required className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3.5 text-sm font-bold focus:border-orange-500 transition-all outline-none" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Scheduling</label>
+                                            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                                <button type="button" onClick={() => handleSchedulingTypeChange('fixed')} className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${form.schedulingType === 'fixed' ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-white shadow-sm' : 'text-slate-400'}`}>Fixed</button>
+                                                <button type="button" onClick={() => handleSchedulingTypeChange('range')} className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${form.schedulingType === 'range' ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-white shadow-sm' : 'text-slate-400'}`}>Range</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 pt-2">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Difficulty Weight (%)</label>
+                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${form.easy + form.medium + form.hard === 100 ? 'text-emerald-500 bg-emerald-50' : 'text-rose-500 bg-rose-50'}`}>{form.easy + form.medium + form.hard}/100</span>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {['easy', 'medium', 'hard'].map(d => (
+                                                <div key={d} className="space-y-1 text-center">
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase">{d}</p>
+                                                    <input type="number" name={d} value={form[d]} onChange={handleChange} className="w-full text-center py-2 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg text-xs font-black focus:border-orange-500 outline-none transition-all" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Start Time</label>
+                                        <input type="datetime-local" name="startTime" value={form.startTime} onChange={handleChange} required className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3.5 text-sm font-bold focus:border-orange-500 outline-none" />
+                                    </div>
+                                    {form.schedulingType === 'range' && (
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-black uppercase tracking-widest text-orange-400 ml-1">End Time</label>
+                                            <input type="datetime-local" name="endTime" value={form.endTime} onChange={handleChange} required className="w-full rounded-xl border-2 border-orange-100 dark:border-orange-600 bg-orange-50/50 px-4 py-3.5 text-sm font-bold focus:border-orange-500 outline-none" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="pt-4 flex gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        className="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={saving}
+                                        className="flex-[2] py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-60"
+                                    >
+                                        {saving ? 'Processing...' : selectedExam ? 'Update & Save' : 'Publish Exam'}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
+                    </div>
+                </div>
+            )}
 
-                        {/* Scheduling Type Toggle */}
-                        <div className="space-y-3 pt-1">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Scheduling Mode</label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => handleSchedulingTypeChange('fixed')}
-                                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border-2 font-bold text-sm transition-all ${form.schedulingType === 'fixed'
-                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
-                                            : 'border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300'
-                                        }`}
-                                >
-                                    <span className="material-symbols-outlined text-base">schedule</span>
-                                    Fixed Time
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleSchedulingTypeChange('range')}
-                                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border-2 font-bold text-sm transition-all ${form.schedulingType === 'range'
-                                            ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400'
-                                            : 'border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300'
-                                        }`}
-                                >
-                                    <span className="material-symbols-outlined text-base">date_range</span>
-                                    Time Range
-                                </button>
+            {/* Delete Confirmation Modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div 
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+                        onClick={cancelDelete}
+                    ></div>
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
+                        <div className="p-8 text-center">
+                            <div className="size-20 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center text-rose-500 mx-auto mb-6 animate-bounce">
+                                <span className="material-symbols-outlined text-4xl">delete_forever</span>
                             </div>
-
-                            {/* Context hint */}
-                            <p className="text-[11px] text-slate-400 font-medium ml-1">
-                                {form.schedulingType === 'fixed'
-                                    ? 'Students must join within 30 mins of the start time.'
-                                    : 'Students can start anytime within the availability window.'}
+                            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Delete Exam?</h3>
+                            <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                                You are about to delete <span className="text-rose-500 font-bold">"{deleteTarget.title}"</span>. 
+                                This action is permanent and will remove all associated records.
                             </p>
                         </div>
-
-                        {/* Start Time */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">
-                                {form.schedulingType === 'range' ? 'Available From' : 'Start Schedule'}
-                            </label>
-                            <input
-                                type="datetime-local"
-                                name="startTime"
-                                value={form.startTime}
-                                onChange={handleChange}
-                                required
-                                max="9999-12-31T23:59"
-                                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-indigo-500 transition-all outline-none"
-                            />
+                        <div className="p-6 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                            <button
+                                onClick={cancelDelete}
+                                className="flex-1 py-4 text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                disabled={deleting}
+                                className="flex-[2] py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-rose-500/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                            >
+                                {deleting ? (
+                                    <>
+                                        <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    'Yes, Delete Exam'
+                                )}
+                            </button>
                         </div>
-
-                        {/* End Time — only for range */}
-                        {form.schedulingType === 'range' && (
-                            <div className="space-y-1">
-                                <label className="text-xs font-black uppercase tracking-widest text-violet-400 ml-1">Available Until</label>
-                                <input
-                                    type="datetime-local"
-                                    name="endTime"
-                                    value={form.endTime}
-                                    onChange={handleChange}
-                                    required
-                                    max="9999-12-31T23:59"
-                                    min={form.startTime || undefined}
-                                    className="w-full rounded-2xl border-2 border-violet-300 dark:border-violet-600 bg-violet-50/50 dark:bg-violet-500/5 px-4 py-3 text-sm font-bold focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all outline-none text-slate-900 dark:text-white"
-                                />
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="w-full mt-4 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-500/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
-                        >
-                            {saving ? (
-                                <>
-                                    <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    Processing...
-                                </>
-                            ) : (
-                                <>
-                                    <span className="material-symbols-outlined">rocket_launch</span>
-                                    Publish Exam
-                                </>
-                            )}
-                        </button>
-                    </form>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
 
-const DifficultyInput = ({ label, name, value, onChange, color }) => (
-    <div className="space-y-1">
-        <p className="text-[10px] font-black uppercase text-slate-400 text-center">{label}</p>
-        <input
-            type="number"
-            name={name}
-            value={value}
-            min={0}
-            max={100}
-            required
-            onChange={onChange}
-            className={`w-full text-center rounded-xl border-2 ${color} bg-white dark:bg-slate-800 py-2 text-xs font-black focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all`}
-        />
+const StatCard = ({ title, value, icon, color, bg }) => (
+    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group">
+        <div className="flex items-center justify-between mb-4">
+            <div className={`size-10 ${bg} ${color} rounded-xl flex items-center justify-center transition-transform group-hover:scale-110`}>
+                <span className="material-symbols-outlined text-xl">{icon}</span>
+            </div>
+            <span className="material-symbols-outlined text-slate-300 text-lg">trending_up</span>
+        </div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</p>
+        <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{value}</p>
     </div>
 );
+
+const getExamStatus = (exam) => {
+    const now = new Date();
+    const start = new Date(exam.startTime);
+    const end = exam.endTime ? new Date(exam.endTime) : new Date(start.getTime() + (exam.durationMinutes || exam.duration) * 60000);
+
+    if (now >= start && now <= end) return 'Live';
+    if (now < start) return 'Upcoming';
+    return 'Past';
+};

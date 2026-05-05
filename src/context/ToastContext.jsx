@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
+import api from "../utils/api";
 
 const ToastContext = createContext();
 
@@ -14,6 +15,7 @@ export const ToastProvider = ({ children }) => {
       setToast(null);
     }, duration);
   }, []);
+
 
   return (
     <ToastContext.Provider value={{ showToast }}>

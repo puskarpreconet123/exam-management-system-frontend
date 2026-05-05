@@ -2,10 +2,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary: #137fec;
-  --color-primary-500: #137fec;
-  --color-background-light: #f6f7f8;
-  --color-background-dark: #101922;
+  --color-primary: #ff8c32;
+  --color-primary-500: #ff8c32;
+  --color-background-light: #fffbf5;
+  --color-background-dark: #12100e;
   --font-display: "Lexend", sans-serif;
 }
 

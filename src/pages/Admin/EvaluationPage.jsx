@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
 
 export default function EvaluationPage() {
     const { showToast } = useToast();
+    const location = useLocation();
     const [exams, setExams] = useState([]);
     const [selectedExamId, setSelectedExamId] = useState('');
     const [attempts, setAttempts] = useState([]);
@@ -14,13 +16,28 @@ export default function EvaluationPage() {
     const [localOverrides, setLocalOverrides] = useState({});
     const [overrideSaving, setOverrideSaving] = useState(false);
 
+    // Confirmation Modal State
+    const [confirmState, setConfirmState] = useState({
+        show: false,
+        title: '',
+        message: '',
+        action: null,
+        type: 'orange' // 'orange' or 'emerald'
+    });
+
     useEffect(() => {
         const fetchExams = async () => {
             try {
                 const { data } = await api.get('/admin/exams');
                 const examsData = data.data || [];
                 setExams(examsData);
-                if (examsData.length > 0) setSelectedExamId(examsData[0]._id);
+                
+                // If we came from ExamsPage with a specific examId
+                if (location.state?.examId) {
+                    setSelectedExamId(location.state.examId);
+                } else if (examsData.length > 0) {
+                    setSelectedExamId(examsData[0]._id);
+                }
             } catch {
                 showToast('Failed to fetch exams', 'error');
             }
@@ -132,8 +149,56 @@ export default function EvaluationPage() {
         }
     };
 
+    const handleEvaluateAll = async () => {
+        if (!selectedExamId) return;
+        
+        setConfirmState({
+            show: true,
+            title: 'Bulk Evaluation',
+            message: 'Calculate scores for all pending submissions of this exam? This will process all students who have submitted but not yet been evaluated.',
+            type: 'orange',
+            action: async () => {
+                setActionLoading('evaluate-all');
+                try {
+                    const { data } = await api.patch(`/admin/exams/${selectedExamId}/evaluate-all`);
+                    showToast(data.message, 'success');
+                    const res = await api.get(`/admin/exams/${selectedExamId}/attempts`);
+                    setAttempts(res.data.data || []);
+                } catch {
+                    showToast('Bulk evaluation failed', 'error');
+                } finally {
+                    setActionLoading(null);
+                }
+            }
+        });
+    };
+
+    const handlePublishAll = async () => {
+        if (!selectedExamId) return;
+
+        setConfirmState({
+            show: true,
+            title: 'Bulk Publishing',
+            message: 'Publish all evaluated results for this exam? Students will be able to view their scores and performance reports immediately.',
+            type: 'emerald',
+            action: async () => {
+                setActionLoading('publish-all');
+                try {
+                    const { data } = await api.patch(`/admin/exams/${selectedExamId}/publish-all`);
+                    showToast(data.message, 'success');
+                    const res = await api.get(`/admin/exams/${selectedExamId}/attempts`);
+                    setAttempts(res.data.data || []);
+                } catch {
+                    showToast('Bulk publishing failed', 'error');
+                } finally {
+                    setActionLoading(null);
+                }
+            }
+        });
+    };
+
     const statusConfig = {
-        submitted: { label: 'Submitted', cls: 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300' },
+        submitted: { label: 'Submitted', cls: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300' },
         active: { label: 'Active', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' },
         default: { label: 'Expired', cls: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300' },
     };
@@ -141,7 +206,7 @@ export default function EvaluationPage() {
     const getStatus = (s) => statusConfig[s] || statusConfig.default;
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="min-h-screen bg-transparent">
             <style>{`
                 .scrollbar-thin::-webkit-scrollbar { width: 4px; }
                 .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
@@ -168,21 +233,49 @@ export default function EvaluationPage() {
                         </p>
                     </div>
 
-                    {/* Exam Selector */}
-                    <div className="relative group">
-                        <select
-                            value={selectedExamId}
-                            onChange={(e) => setSelectedExamId(e.target.value)}
-                            className="appearance-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-4 pr-10 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 shadow-sm hover:border-violet-400 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 focus:outline-none transition-all cursor-pointer min-w-60 block outline-none"
-                        >
-                            <option value="" disabled>Select an exam</option>
-                            {exams.map(exam => (
-                                <option key={exam._id} value={exam._id}>{exam.title}</option>
-                            ))}
-                        </select>
-                        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none group-hover:text-violet-500 transition-colors">
-                            unfold_more
-                        </span>
+                    {/* Exam Selector & Bulk Actions */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="relative group">
+                            <select
+                                value={selectedExamId}
+                                onChange={(e) => setSelectedExamId(e.target.value)}
+                                className="appearance-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md pl-4 pr-10 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 shadow-sm hover:border-orange-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/30 focus:outline-none transition-all cursor-pointer min-w-60 block outline-none"
+                            >
+                                <option value="" disabled>Select an exam</option>
+                                {exams.map(exam => (
+                                    <option key={exam._id} value={exam._id}>{exam.title}</option>
+                                ))}
+                            </select>
+                            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none group-hover:text-orange-500 transition-colors">
+                                unfold_more
+                            </span>
+                        </div>
+
+                        {selectedExamId && (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleEvaluateAll}
+                                    disabled={actionLoading === 'evaluate-all' || loading}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-md transition-all shadow-lg shadow-orange-500/20 disabled:opacity-50"
+                                >
+                                    <span className={`material-symbols-outlined text-[18px] ${actionLoading === 'evaluate-all' ? 'animate-spin' : ''}`}>
+                                        {actionLoading === 'evaluate-all' ? 'sync' : 'calculate'}
+                                    </span>
+                                    {actionLoading === 'evaluate-all' ? 'Calculating...' : 'Calculate All Pending'}
+                                </button>
+                                
+                                <button
+                                    onClick={handlePublishAll}
+                                    disabled={actionLoading === 'publish-all' || loading}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-md transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                                >
+                                    <span className={`material-symbols-outlined text-[18px] ${actionLoading === 'publish-all' ? 'animate-spin' : ''}`}>
+                                        {actionLoading === 'publish-all' ? 'sync' : 'send'}
+                                    </span>
+                                    {actionLoading === 'publish-all' ? 'Publishing...' : 'Publish All Results'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -190,7 +283,7 @@ export default function EvaluationPage() {
                 <div className={`grid gap-6 transition-all duration-500 ${reviewAttempt ? 'grid-cols-1 xl:grid-cols-[1fr_420px]' : 'grid-cols-1'}`}>
 
                     {/* Submissions Table */}
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden fade-in-delay-1">
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden fade-in-delay-1">
                         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <span className="material-symbols-outlined text-slate-400 text-[20px]">group</span>
@@ -218,7 +311,7 @@ export default function EvaluationPage() {
                                         <tr>
                                             <td colSpan="4" className="px-6 py-16 text-center">
                                                 <div className="flex flex-col items-center gap-3">
-                                                    <span className="material-symbols-outlined text-violet-400 text-3xl animate-spin">sync</span>
+                                                    <span className="material-symbols-outlined text-orange-400 text-3xl animate-spin">sync</span>
                                                     <span className="text-sm text-slate-400 font-medium">Loading submissions…</span>
                                                 </div>
                                             </td>
@@ -241,7 +334,7 @@ export default function EvaluationPage() {
                                                     key={att._id}
                                                     onClick={() => handleReview(att._id)}
                                                     className={`group cursor-pointer transition-colors ${isSelected
-                                                        ? 'bg-violet-50 dark:bg-violet-500/10'
+                                                        ? 'bg-orange-50 dark:bg-orange-500/10'
                                                         : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                                         }`}
                                                 >
@@ -249,7 +342,7 @@ export default function EvaluationPage() {
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
                                                             <div className={`w-9 h-9 min-w-9 min-h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-all border ${isSelected
-                                                                ? 'bg-violet-500 text-white border-violet-500'
+                                                                ? 'bg-orange-500 text-white border-orange-500'
                                                                 : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 shadow-sm'
                                                                 }`}>
                                                                 {att.userId?.name?.charAt(0)?.toUpperCase() || '?'}
@@ -276,7 +369,7 @@ export default function EvaluationPage() {
                                                     <td className="px-6 py-4">
                                                         {att.score !== null && att.score !== undefined ? (
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-base font-bold text-violet-600 dark:text-violet-400">
+                                                                <span className="text-base font-bold text-orange-600 dark:text-orange-400">
                                                                     {att.score}
                                                                 </span>
                                                                 {att.isPublished && (
@@ -299,7 +392,7 @@ export default function EvaluationPage() {
                                                                     disabled={actionLoading === att._id}
                                                                     onClick={() => handleEvaluate(att._id)}
                                                                     title="Calculate Score"
-                                                                    className="p-2 rounded-lg text-violet-600 hover:bg-violet-600/10 dark:text-violet-400 dark:hover:bg-violet-400/10 transition-colors disabled:opacity-40"
+                                                                    className="p-2 rounded-lg text-orange-600 hover:bg-orange-600/10 dark:text-orange-400 dark:hover:bg-orange-400/10 transition-colors disabled:opacity-40"
                                                                 >
                                                                     <span className={`material-symbols-outlined text-[18px] ${actionLoading === att._id ? 'animate-spin' : ''}`}>
                                                                         {actionLoading === att._id ? 'sync' : 'calculate'}
@@ -320,7 +413,7 @@ export default function EvaluationPage() {
                                                                 onClick={() => handleReview(att._id)}
                                                                 title="Review"
                                                                 className={`p-2 rounded-lg transition-all ${isSelected
-                                                                    ? 'text-violet-600 bg-violet-600/10 scale-110'
+                                                                    ? 'text-orange-600 bg-orange-600/10 scale-110'
                                                                     : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                                                                     }`}
                                                             >
@@ -342,10 +435,10 @@ export default function EvaluationPage() {
                     {/* Review Panel */}
                     {reviewAttempt && (
                         <div className="slide-in-right">
-                            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden xl:sticky xl:top-6">
+                            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden xl:sticky xl:top-6">
                                 {/* Panel Header */}
                                 <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                                    <div className="w-10 h-10 min-w-10 min-h-10 rounded-full bg-violet-500 flex items-center justify-center text-white font-bold text-base shrink-0 border border-violet-500">
+                                    <div className="w-10 h-10 min-w-10 min-h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-base shrink-0 border border-orange-500">
                                         {(reviewAttempt.attempt?.userId?.name || '?').charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -365,9 +458,9 @@ export default function EvaluationPage() {
                                 </div>
 
                                 {/* Score Summary Bar - read-only */}
-                                <div className="px-5 py-3 bg-violet-50 dark:bg-violet-500/10 border-b border-violet-100 dark:border-violet-500/20 flex items-center justify-between gap-3">
-                                    <span className="text-xs font-semibold text-violet-600 dark:text-violet-400 shrink-0">Final Score</span>
-                                    <span className="text-lg font-black text-violet-700 dark:text-violet-300">
+                                <div className="px-5 py-3 bg-orange-50 dark:bg-orange-500/10 border-b border-orange-100 dark:border-orange-500/20 flex items-center justify-between gap-3">
+                                    <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 shrink-0">Final Score</span>
+                                    <span className="text-lg font-black text-orange-700 dark:text-orange-300">
                                         {reviewAttempt.attempt?.score !== null && reviewAttempt.attempt?.score !== undefined
                                             ? reviewAttempt.attempt.score
                                             : <span className="text-sm font-medium text-slate-400 italic">Not scored</span>
@@ -430,14 +523,14 @@ export default function EvaluationPage() {
                                             return (
                                                 <div
                                                     key={idx}
-                                                    className={`rounded-xl border p-4 transition-all ${effectiveCorrect
+                                                    className={`rounded-md border p-4 transition-all ${effectiveCorrect
                                                         ? 'bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-200 dark:border-emerald-500/20'
                                                         : 'bg-rose-50/50 dark:bg-rose-500/5 border-rose-200 dark:border-rose-500/15'
                                                         }`}
                                                 >
                                                     {/* Question row */}
                                                     <div className="flex items-start gap-2 mb-3">
-                                                        <span className="text-[10px] font-black text-violet-500 mt-0.5 shrink-0 uppercase">Q{idx + 1}</span>
+                                                        <span className="text-[10px] font-black text-orange-500 mt-0.5 shrink-0 uppercase">Q{idx + 1}</span>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
                                                                 {ans.questionText}
@@ -500,7 +593,7 @@ export default function EvaluationPage() {
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <div className="space-y-1">
                                                             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-1 uppercase tracking-wider">Student's Response</p>
-                                                            <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-bold border ${effectiveCorrect
+                                                            <div className={`flex items-center gap-2 px-3 py-2.5 rounded-md text-[13px] font-bold border ${effectiveCorrect
                                                                 ? 'bg-emerald-50/50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20'
                                                                 : 'bg-rose-50/50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300 border-rose-500/20'
                                                                 }`}>
@@ -516,9 +609,9 @@ export default function EvaluationPage() {
                                                         </div>
                                                         <div className="space-y-1">
                                                             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-1 uppercase tracking-wider">Correct Answer</p>
-                                                            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-900 dark:text-violet-200 border border-violet-500/20 shadow-sm">
+                                                            <div className="flex items-center gap-2 px-3 py-2.5 rounded-md text-[13px] font-bold bg-orange-50 dark:bg-orange-500/10 text-orange-900 dark:text-orange-200 border border-orange-500/20 shadow-sm">
                                                                 {ans.correctLabel && /^[A-Z]$/.test(ans.correctLabel) && (
-                                                                    <span className="w-6 h-6 min-w-6 min-h-6 rounded-full flex items-center justify-center text-[10px] font-black bg-violet-500 text-white shrink-0">
+                                                                    <span className="w-6 h-6 min-w-6 min-h-6 rounded-full flex items-center justify-center text-[10px] font-black bg-orange-500 text-white shrink-0">
                                                                         {ans.correctLabel}
                                                                     </span>
                                                                 )}
@@ -536,6 +629,52 @@ export default function EvaluationPage() {
                     )}
                 </div>
             </div>
+
+            {/* Custom Confirmation Modal */}
+            {confirmState.show && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div 
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+                        onClick={() => setConfirmState(prev => ({ ...prev, show: false }))}
+                    ></div>
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-lg shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300 border border-slate-200 dark:border-slate-800">
+                        <div className="p-8 text-center">
+                            <div className={`size-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
+                                confirmState.type === 'orange' ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-500' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500'
+                            }`}>
+                                <span className="material-symbols-outlined text-4xl">
+                                    {confirmState.type === 'orange' ? 'calculate' : 'send'}
+                                </span>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">
+                                {confirmState.title}
+                            </h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                                {confirmState.message}
+                            </p>
+                        </div>
+                        <div className="p-4 bg-orange-50/50 dark:bg-slate-800/50 flex gap-3">
+                            <button
+                                onClick={() => setConfirmState(prev => ({ ...prev, show: false }))}
+                                className="flex-1 py-3 text-sm text-slate-500 dark:bg-slate-400 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    confirmState.action();
+                                    setConfirmState(prev => ({ ...prev, show: false }));
+                                }}
+                                className={`flex-[2] py-3 text-white rounded-md font-bold text-sm shadow-xl active:scale-95 transition-all ${
+                                    confirmState.type === 'orange' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                                }`}
+                            >
+                                Confirm Action
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

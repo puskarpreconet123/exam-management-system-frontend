@@ -23,7 +23,7 @@ export default function Login() {
         try {
             const captchaToken = await executeRecaptcha('login');
             const response = await login(email, password, captchaToken);
-            if (response.user.role === 'admin') {
+            if (response.user.role === 'admin' || response.user.role === 'employee') {
                 navigate('/admin/dashboard');
             } else {
                 navigate('/dashboard');
@@ -40,12 +40,12 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 px-4 transition-colors duration-300">
+        <div className="min-h-screen flex items-center justify-center bg-orange-50/30 dark:bg-slate-950 px-4 transition-colors duration-300">
             <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 bg-white dark:bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
 
                 {/* Left Side: Branding */}
-                <div className="hidden md:flex flex-col justify-center p-12 bg-indigo-600 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500 rounded-full opacity-20" />
+                <div className="hidden md:flex flex-col justify-center p-12 bg-orange-500 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-orange-400 rounded-full opacity-20" />
 
                     <div className="relative z-10">
                         <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/30">
@@ -86,13 +86,13 @@ export default function Login() {
                         <div className="space-y-2">
                             <label className="text-sm font-semibold ml-1 text-slate-700 dark:text-slate-300">Email Address</label>
                             <div className="relative group">
-                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors" size={18} />
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-900 dark:text-white"
+                                    className="w-full pl-11 pr-4 py-3.5 bg-orange-50/30 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white"
                                     placeholder="student@university.edu"
                                 />
                             </div>
@@ -101,16 +101,16 @@ export default function Login() {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center ml-1">
                                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
-                                <button type="button" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Forgot?</button>
+                                <button type="button" className="text-xs text-orange-600 dark:text-orange-400 hover:underline">Forgot?</button>
                             </div>
                             <div className="relative group">
-                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors" size={18} />
                                 <input
                                     type="password"
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-900 dark:text-white"
+                                    className="w-full pl-11 pr-4 py-3.5 bg-orange-50/30 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -119,7 +119,7 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-2xl font-bold shadow-xl shadow-indigo-500/25 flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all mt-4"
+                            className="w-full py-4 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white rounded-2xl font-bold shadow-xl shadow-orange-500/25 flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all mt-4"
                         >
                             {loading ? (
                                 <Loader2 className="animate-spin" size={20} />
@@ -132,7 +132,7 @@ export default function Login() {
 
                     <div className="mt-10 text-center">
                         <span className="text-slate-600 dark:text-slate-400 text-sm font-medium">
-                            Don't have an account? <Link to="/register" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-bold underline underline-offset-4 ml-1 transition-colors">Register</Link>
+                            Don't have an account? <Link to="/register" className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-bold underline underline-offset-4 ml-1 transition-colors">Register</Link>
                         </span>
                     </div>
                 </div>
