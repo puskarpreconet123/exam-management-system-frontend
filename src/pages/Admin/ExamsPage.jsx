@@ -591,7 +591,7 @@ export default function ExamsPage() {
                                     <button
                                         type="button"
                                         onClick={() => setIsCreateModalOpen(false)}
-                                        className="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all"
+                                        className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold rounded-2xl transition-all"
                                     >
                                         Cancel
                                     </button>
@@ -630,7 +630,7 @@ export default function ExamsPage() {
                         <div className="p-6 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
                             <button
                                 onClick={cancelDelete}
-                                className="flex-1 py-4 text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all"
+                                className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold rounded-2xl transition-all"
                             >
                                 Cancel
                             </button>

@@ -32,8 +32,8 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, [token]);
 
-    const login = async (email, password, captchaToken) => {
-        const res = await api.post('/auth/login', { email, password, captchaToken });
+    const login = async (email, password, captchaToken, rememberMe) => {
+        const res = await api.post('/auth/login', { email, password, captchaToken, rememberMe });
         setToken(res.data.token);
         setUser(res.data.user);
         localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
   }
 };
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, logout, register }}>
+        <AuthContext.Provider value={{ user, setUser, token, loading, login, logout, register }}>
             {children}
         </AuthContext.Provider>
     );

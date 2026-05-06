@@ -4,6 +4,8 @@ import StudentDashboard from './pages/StudentDashboard';
 import ActiveExamInterface from './components/ActiveExamInterface';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import ForgotPassword from './pages/Auth/ForgotPassword';
+import ResetPassword from './pages/Auth/ResetPassword';
 import { ThemeProvider } from './components/ThemeContext';
 import { AuthProvider, useAuth } from './components/AuthContext';
 import MyResults from './pages/MyResults';
@@ -20,6 +22,7 @@ import ReferralsPage from './pages/Admin/ReferralsPage';
 import StudentManagementPage from './pages/Admin/StudentManagementPage';
 import EmployeeManagementPage from './pages/Admin/EmployeeManagementPage';
 import ActivityLogPage from './pages/Admin/ActivityLogPage';
+import AdminSettings from './pages/Admin/AdminSettings';
 import { useEffect } from "react";
 import { useToast } from "./context/ToastContext";
 import { setLogoutHandler, setToastHandler } from "./utils/api";
@@ -57,6 +60,8 @@ function App() {
               {/* Public Route */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
               {/* Admin Portal Routes */}
               <Route element={
                 <ProtectedRoute roles={["admin", "employee"]}>
@@ -72,6 +77,7 @@ function App() {
                 <Route path="/admin/students" element={<StudentManagementPage />} />
                 <Route path="/admin/employees" element={<EmployeeManagementPage />} />
                 <Route path="/admin/activity-logs" element={<ActivityLogPage />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               </Route>
               {/* Student Portal Routes */}

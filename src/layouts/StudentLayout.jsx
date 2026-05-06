@@ -27,12 +27,12 @@ export default function StudentLayout() {
             {/* Sidebar */}
             <aside className={`
                 fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 
-                flex flex-col h-full /* <--- IMPORTANT: This allows mt-auto to work */
+                flex flex-col h-full
                 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
                 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
                 {/* 1. Brand Logo Area */}
-                <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <div className="p-5 flex items-center gap-3 shrink-0">
                     <div className="size-8 bg-orange-500 rounded-lg flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
                         <span className="material-symbols-outlined text-xl font-bold">school</span>
                     </div>

@@ -13,6 +13,8 @@ export default function StudentManagementPage() {
     const [search, setSearch] = useState("");
     const [selectedBoard, setSelectedBoard] = useState("All");
     const [selectedClass, setSelectedClass] = useState("All");
+    const [selectedReferral, setSelectedReferral] = useState("All");
+    const [referralCodes, setReferralCodes] = useState([]);
     const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
     const [searchTrigger, setSearchTrigger] = useState(0);
 
@@ -32,7 +34,7 @@ export default function StudentManagementPage() {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const res = await api.get(`/admin/users?page=${pagination.page}&limit=${pagination.limit}&search=${search}&board=${selectedBoard}&class=${selectedClass}`);
+            const res = await api.get(`/admin/users?page=${pagination.page}&limit=${pagination.limit}&search=${search}&board=${selectedBoard}&class=${selectedClass}&referralCode=${selectedReferral}`);
             setStudents(res.data.users || []);
             setPagination(prev => ({ ...prev, total: res.data.total, pages: res.data.pages }));
         } catch (error) {
@@ -46,7 +48,19 @@ export default function StudentManagementPage() {
     useEffect(() => {
         fetchUsers();
         // eslint-disable-next-line
-    }, [pagination.page, pagination.limit, searchTrigger, selectedBoard, selectedClass]);
+    }, [pagination.page, pagination.limit, searchTrigger, selectedBoard, selectedClass, selectedReferral]);
+
+    useEffect(() => {
+        const fetchReferrals = async () => {
+            try {
+                const res = await api.get('/admin/referrals');
+                setReferralCodes(res.data.referrals || []);
+            } catch (error) {
+                console.error("Failed to fetch referral codes", error);
+            }
+        };
+        fetchReferrals();
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -118,7 +132,7 @@ export default function StudentManagementPage() {
         try {
             setIsExporting(true);
             // Fetch all matching data for export (no pagination limit)
-            const res = await api.get(`/admin/users?limit=10000&search=${search}&board=${selectedBoard}&class=${selectedClass}`);
+            const res = await api.get(`/admin/users?limit=10000&search=${search}&board=${selectedBoard}&class=${selectedClass}&referralCode=${selectedReferral}`);
             const allStudents = res.data.users || [];
 
             if (allStudents.length === 0) {
@@ -269,6 +283,23 @@ export default function StudentManagementPage() {
                             <option value="Class 10">Class 10</option>
                             <option value="Class 11">Class 11</option>
                             <option value="Class 12">Class 12</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <label className="text-xs font-bold text-slate-500">Referral:</label>
+                        <select
+                            value={selectedReferral}
+                            onChange={(e) => {
+                                setSelectedReferral(e.target.value);
+                                setPagination(prev => ({ ...prev, page: 1 }));
+                            }}
+                            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none"
+                        >
+                            <option value="All">All Referrals</option>
+                            {referralCodes.map(ref => (
+                                <option key={ref._id} value={ref.code}>{ref.code} ({ref.schoolName})</option>
+                            ))}
                         </select>
                     </div>
                 </div>

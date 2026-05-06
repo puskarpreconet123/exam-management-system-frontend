@@ -1,13 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, ShieldCheck, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../components/AuthContext';
 import { useRecaptcha } from '../../hooks/useRecaptcha';
+
+const Logo = () => (
+    <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/20">
+            <ShieldCheck size={24} className="text-white" />
+        </div>
+        <span className="text-2xl font-bold text-slate-800 tracking-tight">
+            {import.meta.env.VITE_APP_TITLE || "EduDash"}
+        </span>
+    </div>
+);
 
 export default function Login() {
     // Logic States
     const [email, setEmail] = useState('puskar.preconet@gmail.com');
     const [password, setPassword] = useState('Puskar@preconet');
+    const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -22,7 +35,7 @@ export default function Login() {
 
         try {
             const captchaToken = await executeRecaptcha('login');
-            const response = await login(email, password, captchaToken);
+            const response = await login(email, password, captchaToken, rememberMe);
             if (response.user.role === 'admin' || response.user.role === 'employee') {
                 navigate('/admin/dashboard');
             } else {
@@ -40,100 +53,108 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-orange-50/30 dark:bg-slate-950 px-4 transition-colors duration-300">
-            <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 bg-white dark:bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+        <div className="min-h-screen flex bg-background-light font-sans">
+            {/* Left Side: Illustration/Image */}
+            <div className="hidden lg:block lg:w-1/2 relative">
+                <img 
+                    src="/auth-bg.png" 
+                    alt="Classroom" 
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/5"></div>
+            </div>
 
-                {/* Left Side: Branding */}
-                <div className="hidden md:flex flex-col justify-center p-12 bg-orange-500 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-orange-400 rounded-full opacity-20" />
-
-                    <div className="relative z-10">
-                        <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md border border-white/30">
-                            <ShieldCheck size={32} className="text-white" />
-                        </div>
-                        <h1 className="text-4xl font-extrabold mb-6 leading-tight">
-                            Secure Enterprise <br /> Exam Portal
-                        </h1>
-                        <p className="text-indigo-100 text-lg mb-10 max-w-sm">
-                            Access your assessments with military-grade encryption and real-time monitoring.
-                        </p>
-
-                        <div className="flex items-center gap-4">
-                            <div className={`h-1.5 rounded-full transition-all duration-500 w-12 bg-white`} />
-                            <div className={`h-1.5 rounded-full transition-all duration-500 w-6 bg-white/40`} />
-                        </div>
+            {/* Right Side: Form */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 lg:px-24 py-12 overflow-y-auto">
+                <div className="max-w-md w-full mx-auto">
+                    <div className="mb-8">
+                        <Logo />
                     </div>
-                </div>
 
-                {/* Right Side: Form */}
-                <div className="p-8 md:p-14 flex flex-col justify-center bg-white dark:bg-slate-950">
-                    <div className="mb-10 text-center md:text-left">
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
-                            Sign In
-                        </h2>
-                        <p className="text-slate-500 dark:text-slate-400">
-                            Enter your credentials to continue.
-                        </p>
+                    <div className="mb-10">
+                        <h1 className="text-4xl font-bold text-slate-900 mb-2">Welcome Back 👋</h1>
+                        <p className="text-slate-500">Log in to your account to continue</p>
                     </div>
 
                     {error && (
-                        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-600 dark:text-red-400 text-sm font-medium animate-in fade-in slide-in-from-top-2">
+                        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-600 text-sm font-medium animate-in fade-in slide-in-from-top-2">
                             {error}
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold ml-1 text-slate-700 dark:text-slate-300">Email Address</label>
-                            <div className="relative group">
-                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors" size={18} />
+                            <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
+                                Email Address <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3.5 bg-orange-50/30 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white"
-                                    placeholder="student@university.edu"
+                                    className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-slate-900 placeholder:text-slate-400"
+                                    placeholder="Enter your email"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <div className="flex justify-between items-center ml-1">
-                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
-                                <button type="button" className="text-xs text-orange-600 dark:text-orange-400 hover:underline">Forgot?</button>
-                            </div>
+                            <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
+                                Password <span className="text-red-500">*</span>
+                            </label>
                             <div className="relative group">
-                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors" size={18} />
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3.5 bg-orange-50/30 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-slate-900 dark:text-white"
-                                    placeholder="••••••••"
+                                    className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-slate-900 placeholder:text-slate-400 pr-12"
+                                    placeholder="Enter your password"
                                 />
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
                             </div>
+                        </div>
+
+                        <div className="flex items-center justify-between py-2">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input 
+                                    type="checkbox" 
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary transition-all cursor-pointer"
+                                />
+                                <span className="text-sm text-slate-500 group-hover:text-slate-700 transition-colors">Remember me</span>
+                            </label>
+                            <Link to="/forgot-password" core="true" className="text-sm font-bold text-primary hover:text-primary-500 transition-colors">
+                                Forgot Password?
+                            </Link>
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-4 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white rounded-2xl font-bold shadow-xl shadow-orange-500/25 flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all mt-4"
+                            className="w-full py-3 bg-primary hover:bg-primary-500 disabled:bg-orange-300 text-white rounded-xl font-bold shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transform active:scale-[0.99] transition-all text-base"
                         >
                             {loading ? (
                                 <Loader2 className="animate-spin" size={20} />
                             ) : (
-                                "Sign In"
+                                "Log In"
                             )}
-                            {!loading && <ArrowRight size={20} />}
                         </button>
                     </form>
 
                     <div className="mt-10 text-center">
-                        <span className="text-slate-600 dark:text-slate-400 text-sm font-medium">
-                            Don't have an account? <Link to="/register" className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-bold underline underline-offset-4 ml-1 transition-colors">Register</Link>
-                        </span>
+                        <p className="text-slate-500 text-sm">
+                            Don't have an account? 
+                            <Link to="/register" className="ml-1 text-primary font-bold hover:underline underline-offset-4">Sign Up</Link>
+                        </p>
                     </div>
                 </div>
             </div>

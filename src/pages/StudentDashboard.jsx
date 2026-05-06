@@ -4,10 +4,11 @@ import { useAuth } from '../components/AuthContext';
 import { useToast } from '../context/ToastContext';
 import api from '../utils/api';
 import dayjs from 'dayjs';
+import { CreditCard, Loader2, ShieldCheck, ArrowRight, CheckCircle } from 'lucide-react';
 
 export default function StudentDashboard() {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, setUser } = useAuth();
     const { showToast } = useToast();
     const location = useLocation();
 
@@ -15,6 +16,8 @@ export default function StudentDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [result, setResult] = useState({ publishedAttempts: [] });
+    const [isPaying, setIsPaying] = useState(false);
+    const [paymentSettings, setPaymentSettings] = useState({ amount: 0, keyId: '' });
 
     useEffect(() => {
         if (location.state?.terminated) {
@@ -48,6 +51,86 @@ export default function StudentDashboard() {
         };
         fetchResult();
     }, [user.id]);
+
+    useEffect(() => {
+        if (user?.paymentStatus === 'pending') {
+            api.get('/auth/settings')
+                .then(res => {
+                    setPaymentSettings({
+                        amount: res.data.registrationAmount || 0,
+                        keyId: res.data.razorpayKeyId || ''
+                    });
+                })
+                .catch(err => console.error("Settings fetch failed", err));
+        }
+    }, [user?.paymentStatus]);
+
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
+    const handlePayment = async () => {
+        const res = await loadRazorpayScript();
+        if (!res) {
+            showToast("Razorpay SDK failed to load. Are you online?", "error");
+            return;
+        }
+
+        try {
+            setIsPaying(true);
+            const orderRes = await api.post('/payment/create-order', {
+                amount: paymentSettings.amount * 100, // in paise
+            });
+
+            const { amount, id: order_id, currency } = orderRes.data;
+
+            const options = {
+                key: paymentSettings.keyId,
+                amount: amount.toString(),
+                currency: currency,
+                name: import.meta.env.VITE_APP_TITLE || "Exam Portal",
+                description: "Student Registration Fee",
+                order_id: order_id,
+                handler: async function (response) {
+                    try {
+                        const verifyRes = await api.post('/payment/verify-payment', response);
+                        if (verifyRes.status === 200) {
+                            showToast("Payment Successful!", "success");
+                            const updatedUser = { ...user, paymentStatus: 'completed' };
+                            setUser(updatedUser);
+                            localStorage.setItem('user', JSON.stringify(updatedUser));
+                        }
+                    } catch (err) {
+                        showToast("Payment verification failed", "error");
+                    } finally {
+                        setIsPaying(false);
+                    }
+                },
+                prefill: {
+                    name: user.name,
+                    email: user.email,
+                },
+                theme: { color: "#f97316" },
+                modal: {
+                    ondismiss: function() {
+                        setIsPaying(false);
+                    }
+                }
+            };
+
+            const paymentObject = new window.Razorpay(options);
+            paymentObject.open();
+        } catch (err) {
+            showToast("Failed to initiate payment", "error");
+            setIsPaying(false);
+        }
+    };
 
     const handleJoinLobby = async (examId) => {
         try {
@@ -85,9 +168,45 @@ export default function StudentDashboard() {
                 </h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                     <span className="text-slate-700 dark:text-slate-300 font-medium">{import.meta.env.VITE_APP_TITLE || 'EduDash'} → </span> 
-                    Welcome back, {user?.name}. You have {stats.upcoming.length} upcoming exams.
+                    Welcome back, {user?.name}. You have {stats.upcoming.length} exams.
                 </p>
             </div>
+
+            {user?.paymentStatus === 'pending' && (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-orange-500/20 overflow-hidden shadow-xl shadow-orange-500/5 animate-in slide-in-from-top-4 duration-500">
+                    <div className="p-1 bg-orange-500 flex items-center justify-center gap-2">
+                        <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Action Required</span>
+                    </div>
+                    <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-5">
+                            <div className="size-14 rounded-2xl bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-orange-600 shrink-0">
+                                <CreditCard size={28} />
+                            </div>
+                            <div className="space-y-1">
+                                <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                                    Complete Your Registration
+                                    <span className="px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-[10px] font-black uppercase tracking-wider">Pending</span>
+                                </h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-lg">
+                                    Your registration is currently incomplete. Please pay the registration fee of <span className="text-orange-600 font-bold">₹{paymentSettings.amount}</span> to unlock all exam features.
+                                </p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={handlePayment}
+                            disabled={isPaying}
+                            className="w-full md:w-auto px-8 py-4 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-orange-600/25 flex items-center justify-center gap-3 transition-all active:scale-95 group"
+                        >
+                            {isPaying ? <Loader2 className="animate-spin" size={20} /> : (
+                                <>
+                                    Pay Registration Fee
+                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {error && (
                 <div className="p-4 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg border border-red-100 dark:border-red-500/20 font-medium text-sm">

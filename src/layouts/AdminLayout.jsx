@@ -19,6 +19,7 @@ export default function AdminLayout() {
         { to: "/admin/students", icon: "manage_accounts", label: "Students", permission: "students" },
         { to: "/admin/employees", icon: "badge", label: "Employees", adminOnly: true },
         { to: "/admin/activity-logs", icon: "history", label: "Activity Logs", adminOnly: true },
+        { to: "/admin/settings", icon: "payments", label: "Integration", adminOnly: true },
     ];
 
     const filteredNavItems = navItems.filter(item => {
@@ -55,20 +56,20 @@ export default function AdminLayout() {
                 </div>
 
                 {/* User Profile Section at top of sidebar */}
-                <div className="px-5 pb-4 mb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
+                <div className="px-4 pb-3 mb-1 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
                         <div className="relative shrink-0">
-                            <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 font-bold overflow-hidden">
+                            <div className="size-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 font-bold overflow-hidden text-xs">
                                 {user?.avatar ? (
                                     <img src={user.avatar} alt="User" className="w-full h-full object-cover" />
                                 ) : (
                                     user?.name?.charAt(0).toUpperCase() || 'A'
                                 )}
                             </div>
-                            <span className="absolute bottom-0 right-0 size-2.5 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></span>
+                            <span className="absolute bottom-0 right-0 size-2 bg-green-500 border border-white dark:border-slate-800 rounded-full"></span>
                         </div>
                         <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold text-slate-800 dark:text-white truncate">
+                            <p className="text-xs font-bold text-slate-800 dark:text-white truncate">
                                 {user?.name || 'Admin User'}
                             </p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
