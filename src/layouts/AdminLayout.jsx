@@ -18,6 +18,7 @@ export default function AdminLayout() {
         { to: "/admin/referrals", icon: "group_add", label: "Referrals", permission: "referrals" },
         { to: "/admin/students", icon: "manage_accounts", label: "Students", permission: "students" },
         { to: "/admin/employees", icon: "badge", label: "Employees", adminOnly: true },
+        { to: "/admin/activity-logs", icon: "history", label: "Activity Logs", adminOnly: true },
     ];
 
     const filteredNavItems = navItems.filter(item => {

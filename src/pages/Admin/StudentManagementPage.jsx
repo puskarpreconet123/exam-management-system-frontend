@@ -208,7 +208,7 @@ export default function StudentManagementPage() {
                                 placeholder="Search name, email..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium focus:ring-4 focus:ring-indigo-500/10 outline-none text-slate-900 dark:text-white"
+                                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium focus:ring-4 focus:ring-orange-500/10 outline-none text-slate-900 dark:text-white"
                             />
                             {search && (
                                 <button type="button" onClick={handleClearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -216,7 +216,7 @@ export default function StudentManagementPage() {
                                 </button>
                             )}
                         </div>
-                        <button type="submit" className="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/20">
+                        <button type="submit" className="px-5 py-2.5 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 transition shadow-lg shadow-orange-500/20">
                             Search
                         </button>
                     </form>
@@ -239,7 +239,7 @@ export default function StudentManagementPage() {
                                 setSelectedBoard(e.target.value);
                                 setPagination(prev => ({ ...prev, page: 1 }));
                             }}
-                            className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+                            className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none"
                         >
                             <option value="All">All Boards</option>
                             <option value="General">General</option>
@@ -257,7 +257,7 @@ export default function StudentManagementPage() {
                                 setSelectedClass(e.target.value);
                                 setPagination(prev => ({ ...prev, page: 1 }));
                             }}
-                            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+                            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none"
                         >
                             <option value="All">All Classes</option>
                             <option value="General">General</option>
@@ -278,7 +278,7 @@ export default function StudentManagementPage() {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm relative min-h-[400px]">
                 {loading && (
                     <div className="absolute inset-0 z-10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
-                        <div className="animate-spin size-10 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
+                        <div className="animate-spin size-10 border-4 border-orange-600 border-t-transparent rounded-full"></div>
                     </div>
                 )}
                 
@@ -311,7 +311,7 @@ export default function StudentManagementPage() {
                                     className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition group"
                                 >
                                     <td className="p-4">
-                                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">{student.name}</div>
+                                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-orange-600 transition-colors">{student.name}</div>
                                         <div className="text-xs font-medium text-slate-500 flex items-center gap-1">
                                             <span className="material-symbols-outlined text-[14px]">phone</span>
                                             {student.studentDetails?.studentContact || "No Phone"}
@@ -320,7 +320,7 @@ export default function StudentManagementPage() {
                                     <td className="p-4 font-medium text-slate-600 dark:text-slate-300">{student.email}</td>
                                     <td className="p-4">
                                         <div className="flex flex-col gap-1">
-                                            <span className="px-2 py-0.5 w-fit text-[10px] font-black rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/20">
+                                            <span className="px-2 py-0.5 w-fit text-[10px] font-black rounded-md bg-orange-50 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300 border border-orange-100 dark:border-orange-500/20">
                                                 {student.studentDetails?.board || "General"}
                                             </span>
                                             <span className="text-[11px] font-bold text-slate-500">
@@ -380,7 +380,7 @@ export default function StudentManagementPage() {
                         {/* Modal Header */}
                         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-800/50">
                             <div className="flex items-center gap-4">
-                                <div className="size-12 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 font-black text-xl">
+                                <div className="size-12 rounded-xl bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0 font-black text-xl">
                                     {selectedStudent.name.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
@@ -391,7 +391,7 @@ export default function StudentManagementPage() {
                             <div className="flex items-center gap-2">
                                 <button 
                                     onClick={() => isEditMode ? setIsEditMode(false) : setIsEditMode(true)}
-                                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition flex items-center gap-2 ${isEditMode ? 'bg-slate-200 text-slate-700 hover:bg-slate-300  dark:bg-slate-700 dark:text-slate-200' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400'}`}
+                                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition flex items-center gap-2 ${isEditMode ? 'bg-slate-200 text-slate-700 hover:bg-slate-300  dark:bg-slate-700 dark:text-slate-200' : 'bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-500/10 dark:text-orange-400'}`}
                                 >
                                     <span className="material-symbols-outlined text-[18px]">{isEditMode ? "chevron_backward" : "edit"}</span>
                                     {isEditMode ? "Back" : "Edit"}
@@ -411,21 +411,21 @@ export default function StudentManagementPage() {
                                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Full Name</label>
                                             <input 
                                                 value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-bold focus:ring-4 focus:ring-orange-500/10 outline-none"
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Email Address</label>
                                             <input 
                                                 value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-bold focus:ring-4 focus:ring-orange-500/10 outline-none"
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Payment Status</label>
                                             <select 
                                                 value={formData.paymentStatus} onChange={(e) => setFormData({...formData, paymentStatus: e.target.value})}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-bold focus:ring-4 focus:ring-orange-500/10 outline-none"
                                             >
                                                 <option value="pending">Pending</option>
                                                 <option value="completed">Completed</option>
@@ -437,7 +437,7 @@ export default function StudentManagementPage() {
                                             <span className="material-symbols-outlined text-[18px]">delete</span>
                                             Delete Student
                                         </button>
-                                        <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest transition flex items-center gap-2 shadow-lg shadow-indigo-500/20">
+                                        <button onClick={handleSave} disabled={isSaving} className="px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-black text-xs uppercase tracking-widest transition flex items-center gap-2 shadow-lg shadow-orange-500/20">
                                             {isSaving ? "Saving..." : "Save Changes"}
                                         </button>
                                     </div>
@@ -448,7 +448,7 @@ export default function StudentManagementPage() {
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                         <DetailItem icon="badge" label="Name" value={selectedStudent.name} />
                                         <DetailItem icon="mail" label="Email" value={selectedStudent.email} />
-                                        <DetailItem icon={selectedStudent.role === 'admin' ? "admin_panel_settings" : "person"} label="Role" value={<span className="uppercase text-[10px] font-black tracking-widest text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10">{selectedStudent.role}</span>} />
+                                        <DetailItem icon={selectedStudent.role === 'admin' ? "admin_panel_settings" : "person"} label="Role" value={<span className="uppercase text-[10px] font-black tracking-widest text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded bg-orange-50 dark:bg-orange-500/10">{selectedStudent.role}</span>} />
                                         <DetailItem icon="event" label="Joined On" value={dayjs(selectedStudent.createdAt).format("DD MMM YYYY, hh:mm A")} />
                                         
                                         <DetailItem icon="verified" label="Email Verified" value={selectedStudent.emailVerified ? <span className="text-emerald-500 font-bold">Yes</span> : <span className="text-orange-500 font-bold">No</span>} />

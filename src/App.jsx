@@ -19,6 +19,7 @@ import EvaluationPage from './pages/Admin/EvaluationPage';
 import ReferralsPage from './pages/Admin/ReferralsPage';
 import StudentManagementPage from './pages/Admin/StudentManagementPage';
 import EmployeeManagementPage from './pages/Admin/EmployeeManagementPage';
+import ActivityLogPage from './pages/Admin/ActivityLogPage';
 import { useEffect } from "react";
 import { useToast } from "./context/ToastContext";
 import { setLogoutHandler, setToastHandler } from "./utils/api";
@@ -70,6 +71,7 @@ function App() {
                 <Route path="/admin/referrals" element={<ReferralsPage />} />
                 <Route path="/admin/students" element={<StudentManagementPage />} />
                 <Route path="/admin/employees" element={<EmployeeManagementPage />} />
+                <Route path="/admin/activity-logs" element={<ActivityLogPage />} />
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               </Route>
               {/* Student Portal Routes */}

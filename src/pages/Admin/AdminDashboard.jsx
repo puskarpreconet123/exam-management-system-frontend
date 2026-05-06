@@ -139,8 +139,8 @@ export default function AdminDashboard() {
                             title="Pending Evals"
                             value={stats.pendingEvaluations.toLocaleString()}
                             icon="fact_check"
-                            color="text-green-500"
-                            bgColor="bg-green-50 dark:bg-green-500/10"
+                            color="text-orange-600"
+                            bgColor="bg-orange-50 dark:bg-orange-500/10"
                             trend="Needs Attention"
                             trendColor="text-orange-500"
                             onClick={() => navigate('/admin/evaluation')}

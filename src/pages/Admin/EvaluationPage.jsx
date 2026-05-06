@@ -206,7 +206,7 @@ export default function EvaluationPage() {
     const getStatus = (s) => statusConfig[s] || statusConfig.default;
 
     return (
-        <div className="min-h-screen bg-transparent">
+        <div className="min-h-screen bg-[#fffcf0] dark:bg-[#0c0a09]">
             <style>{`
                 .scrollbar-thin::-webkit-scrollbar { width: 4px; }
                 .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }

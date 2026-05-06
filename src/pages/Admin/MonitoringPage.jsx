@@ -249,7 +249,7 @@ export default function MonitoringPage() {
                             disabled={loading}
                             className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all active:scale-90 disabled:opacity-50 flex items-center justify-center"
                         >
-                            <span className={`material-symbols-outlined text-indigo-600 ${loading ? 'animate-spin' : ''}`}>
+                            <span className={`material-symbols-outlined text-orange-600 ${loading ? 'animate-spin' : ''}`}>
                                 {loading ? 'sync' : 'refresh'}
                             </span>
                         </button>
@@ -257,12 +257,12 @@ export default function MonitoringPage() {
                 </div>
 
                 {selectedLogs.length > 0 && (
-                    <div className="px-6 md:px-10 py-3 bg-indigo-50/50 dark:bg-indigo-500/10 border-b border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+                    <div className="px-6 md:px-10 py-3 bg-orange-50/50 dark:bg-orange-500/10 border-b border-orange-100 dark:border-orange-500/20 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
                         <div className="flex items-center gap-3">
-                            <span className="flex size-6 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white">
+                            <span className="flex size-6 items-center justify-center rounded-full bg-orange-600 text-[10px] font-black text-white">
                                 {selectedLogs.length}
                             </span>
-                            <span className="text-sm font-bold text-indigo-900 dark:text-indigo-300">Logs Selected</span>
+                            <span className="text-sm font-bold text-orange-900 dark:text-orange-300">Logs Selected</span>
                         </div>
                         <div className="flex items-center gap-3">
                             <button
@@ -292,7 +292,7 @@ export default function MonitoringPage() {
                                         type="checkbox" 
                                         checked={logs.length > 0 && selectedLogs.length === logs.length}
                                         onChange={toggleAllLogs}
-                                        className="size-4 rounded-sm text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                                        className="size-4 rounded-sm text-orange-600 border-slate-300 focus:ring-orange-500"
                                     />
                                 </th>
                                 <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Student Profile</th>
@@ -306,7 +306,7 @@ export default function MonitoringPage() {
                             {loading && logs.length === 0 ? (
                                 <tr>
                                     <td colSpan="6" className="p-24 text-center">
-                                        <div className="animate-spin size-12 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-6"></div>
+                                        <div className="animate-spin size-12 border-4 border-orange-600 border-t-transparent rounded-full mx-auto mb-6"></div>
                                         <p className="text-sm font-bold text-slate-500">Analyzing System Logs...</p>
                                     </td>
                                 </tr>
@@ -320,7 +320,7 @@ export default function MonitoringPage() {
                                 logs.map((log) => (
                                     <tr
                                         key={log._id}
-                                        className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer ${selectedLogs.includes(log._id) ? 'bg-indigo-50/30 dark:bg-indigo-500/5' : ''}`}
+                                        className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer ${selectedLogs.includes(log._id) ? 'bg-orange-50/30 dark:bg-orange-500/5' : ''}`}
                                         onClick={(e) => {
                                             // Prevent row click if action button was clicked
                                             if (!e.target.closest('button') && e.target.type !== 'checkbox') {
@@ -333,7 +333,7 @@ export default function MonitoringPage() {
                                                 type="checkbox" 
                                                 checked={selectedLogs.includes(log._id)}
                                                 onChange={() => toggleLogSelection(log._id)}
-                                                className="size-4 rounded-sm text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                                                className="size-4 rounded-sm text-orange-600 border-slate-300 focus:ring-orange-500"
                                             />
                                         </td>
                                         <td className="px-10 py-6">
@@ -371,7 +371,7 @@ export default function MonitoringPage() {
                                             <div className="flex flex-col gap-1.5">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Exam</span>
-                                                    <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 rounded-md ring-1 ring-indigo-500/10">#{log.examId?.slice(-6) || 'N/A'}</span>
+                                                    <span className="px-2 py-0.5 bg-orange-50 dark:bg-orange-500/10 text-[10px] font-bold text-orange-600 dark:text-orange-400 rounded-md ring-1 ring-orange-500/10">#{log.examId?.slice(-6) || 'N/A'}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
                                                     <span className="material-symbols-outlined text-[14px]">fingerprint</span>
@@ -431,7 +431,7 @@ export default function MonitoringPage() {
                                                 key={i}
                                                 onClick={() => loadLogs(i)}
                                                 disabled={loading}
-                                                className={`size-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all ${page === i ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                                                className={`size-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all ${page === i ? 'bg-orange-50 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                                             >
                                                 {i}
                                             </button>
@@ -455,7 +455,7 @@ export default function MonitoringPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <LogSummaryCard title="Most Common" value={stats.mostCommon.replace('_', ' ')} sub={stats.mostCommonPercent} icon="tab" color="text-amber-500" />
-                <LogSummaryCard title="Peak Time" value={stats.peakTime} sub="UTC Schedule" icon="alarm" color="text-indigo-500" />
+                <LogSummaryCard title="Peak Time" value={stats.peakTime} sub="UTC Schedule" icon="alarm" color="text-orange-500" />
                 <LogSummaryCard title="Force Terminate" value={stats.forceTerminations} sub="Total Kicks" icon="gavel" color="text-rose-500" />
             </div>
 
@@ -467,7 +467,7 @@ export default function MonitoringPage() {
                             <div>
                                 <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Attempt Details</h3>
                                 <p className="text-sm font-bold text-slate-500 mt-2">
-                                    Student: <span className="text-indigo-600 dark:text-indigo-400">{selectedAttempt.studentName}</span> ({selectedAttempt.studentEmail})
+                                    Student: <span className="text-orange-600 dark:text-orange-400">{selectedAttempt.studentName}</span> ({selectedAttempt.studentEmail})
                                 </p>
                             </div>
                             <button
@@ -493,7 +493,7 @@ export default function MonitoringPage() {
                             <h4 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">Activity Log</h4>
                             {attemptLogs.length === 0 ? (
                                 <div className="p-12 text-center text-slate-400 font-bold">
-                                    <div className="animate-spin size-8 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                                    <div className="animate-spin size-8 border-4 border-orange-600 border-t-transparent rounded-full mx-auto mb-4"></div>
                                     Loading logs...
                                 </div>
                             ) : (

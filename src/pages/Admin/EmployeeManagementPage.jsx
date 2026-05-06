@@ -111,7 +111,7 @@ export default function EmployeeManagementPage() {
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-all shadow-md shadow-teal-500/20 font-semibold"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all shadow-md shadow-orange-500/20 font-semibold"
                 >
                     <span className="material-symbols-outlined">add</span>
                     <span>Add Employee</span>
@@ -148,11 +148,16 @@ export default function EmployeeManagementPage() {
                                     <tr key={emp._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="size-10 rounded-full bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold">
+                                                <div className="size-10 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
                                                     {emp.name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <p className="font-semibold text-slate-800 dark:text-white">{emp.name}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-semibold text-slate-800 dark:text-white">{emp.name}</p>
+                                                        <span className="px-1.5 py-0.5 bg-orange-50 dark:bg-orange-900/30 text-[10px] font-bold text-orange-600 dark:text-orange-400 rounded border border-orange-100 dark:border-orange-800/50 uppercase tracking-tighter">
+                                                            {emp.employeeId || 'NO ID'}
+                                                        </span>
+                                                    </div>
                                                     <p className="text-xs text-slate-500 dark:text-slate-400">{emp.email}</p>
                                                 </div>
                                             </div>
@@ -174,7 +179,7 @@ export default function EmployeeManagementPage() {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleOpenModal(emp)}
-                                                    className="p-2 text-slate-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-all"
+                                                    className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-all"
                                                     title="Edit Permissions"
                                                 >
                                                     <span className="material-symbols-outlined text-xl">edit</span>
@@ -218,7 +223,7 @@ export default function EmployeeManagementPage() {
                                         required
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                        className="w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
                                         placeholder="John Doe"
                                     />
                                 </div>
@@ -229,7 +234,7 @@ export default function EmployeeManagementPage() {
                                         required
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                        className="w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
                                         placeholder="john@example.com"
                                     />
                                 </div>
@@ -242,7 +247,7 @@ export default function EmployeeManagementPage() {
                                         required={!editingEmployee}
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                        className="w-full px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
                                         placeholder="••••••••"
                                     />
                                 </div>
@@ -259,12 +264,12 @@ export default function EmployeeManagementPage() {
                                             className={`
                                                 flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all text-left
                                                 ${formData.permissions.includes(perm.id)
-                                                    ? 'bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400'
+                                                    ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400'
                                                     : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
                                                 }
                                             `}
                                         >
-                                            <span className={`material-symbols-outlined text-xl ${formData.permissions.includes(perm.id) ? 'text-teal-500' : 'text-slate-400'}`}>
+                                            <span className={`material-symbols-outlined text-xl ${formData.permissions.includes(perm.id) ? 'text-orange-500' : 'text-slate-400'}`}>
                                                 {perm.icon}
                                             </span>
                                             <span className="text-xs font-semibold leading-tight">{perm.label}</span>
@@ -283,7 +288,7 @@ export default function EmployeeManagementPage() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-semibold shadow-md shadow-teal-500/20 transition-all"
+                                    className="flex-1 px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold shadow-md shadow-orange-500/20 transition-all"
                                 >
                                     {editingEmployee ? 'Save Changes' : 'Create Account'}
                                 </button>

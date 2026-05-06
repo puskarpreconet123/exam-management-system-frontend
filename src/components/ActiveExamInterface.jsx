@@ -504,7 +504,7 @@ export default function ActiveExamInterface() {
                                     Question {currentIdx + 1} of {questions.length}
                                 </span>
                                 {currentQuestion.type === 'tita' && (
-                                    <span className="px-2.5 py-1 rounded-full text-[10px] lg:text-xs font-black uppercase tracking-widest bg-violet-100 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20">
+                                    <span className="px-2.5 py-1 rounded-full text-[10px] lg:text-xs font-black uppercase tracking-widest bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20">
                                         TITA
                                     </span>
                                 )}
@@ -625,12 +625,12 @@ export default function ActiveExamInterface() {
                         ) : (
                             /* TITA input */
                             <div className="flex-1 flex flex-col gap-3">
-                                <div className="p-4 rounded-xl bg-violet-50 dark:bg-violet-500/5 border border-violet-200 dark:border-violet-500/20">
-                                    <p className="text-xs font-black uppercase tracking-widest text-violet-500 dark:text-violet-400 flex items-center gap-1.5">
+                                <div className="p-4 rounded-xl bg-orange-50 dark:bg-orange-500/5 border border-orange-200 dark:border-orange-500/20">
+                                    <p className="text-xs font-black uppercase tracking-widest text-orange-500 dark:text-orange-400 flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-[16px]">keyboard</span>
                                         Type In The Answer
                                     </p>
-                                    <p className="text-xs text-violet-600/70 dark:text-violet-400/60 mt-1">
+                                    <p className="text-xs text-orange-600/70 dark:text-orange-400/60 mt-1">
                                         Type your answer exactly. Spelling and case may matter.
                                     </p>
                                 </div>
@@ -640,7 +640,7 @@ export default function ActiveExamInterface() {
                                     onChange={(e) => handleTitaInput(currentQuestion._id, e.target.value)}
                                     placeholder="Type your answer here..."
                                     autoComplete="off"
-                                    className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-4 text-base lg:text-lg font-bold text-slate-900 dark:text-white placeholder:text-slate-400 placeholder:font-normal focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all outline-none"
+                                    className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-4 text-base lg:text-lg font-bold text-slate-900 dark:text-white placeholder:text-slate-400 placeholder:font-normal focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none"
                                 />
                                 {answers[currentQuestion._id] && (
                                     <p className="text-xs text-slate-400 font-medium ml-1">
@@ -659,7 +659,7 @@ export default function ActiveExamInterface() {
                             <button
                                 onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
                                 disabled={currentIdx === 0}
-                                className="group flex items-center gap-1 md:gap-2 px-3 md:px-6 py-2 md:py-3 font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all duration-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                className="group flex items-center gap-1 md:gap-2 px-3 md:px-6 py-2 md:py-3 font-bold text-slate-500 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-xl transition-all duration-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                             >
                                 <span className="material-symbols-outlined text-lg md:text-xl transition-transform group-hover:-translate-x-1">arrow_back</span>
                                 <span className="hidden md:inline tracking-wide">Previous</span>
@@ -689,7 +689,7 @@ export default function ActiveExamInterface() {
                             ) : (
                                 <button
                                     onClick={handleSaveNext}
-                                    className="group relative flex items-center gap-1 md:gap-2 px-4 md:px-10 py-2 md:py-3 bg-indigo-600 dark:bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-400 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97] transition-all duration-300 lg:mr-0"
+                                    className="group relative flex items-center gap-1 md:gap-2 px-4 md:px-10 py-2 md:py-3 bg-orange-600 dark:bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-700 dark:hover:bg-orange-400 hover:shadow-xl hover:shadow-orange-500/30 active:scale-[0.97] transition-all duration-300 lg:mr-0"
                                 >
                                     <span className="hidden md:inline tracking-wide">Save & Next</span>
                                     <span className="material-symbols-outlined text-lg md:text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
@@ -769,7 +769,7 @@ export default function ActiveExamInterface() {
                                                             <span className="absolute -top-1 -right-1 text-[8px] text-amber-300 drop-shadow-md">★</span>
                                                         )}
                                                         {q.type === 'tita' && (
-                                                            <span className="absolute -top-1 -left-1 text-[7px] font-black bg-violet-500 text-white px-0.5 rounded leading-none">T</span>
+                                                            <span className="absolute -top-1 -left-1 text-[7px] font-black bg-orange-500 text-white px-0.5 rounded leading-none">T</span>
                                                         )}
                                                         {idx + 1}
                                                     </button>
@@ -796,7 +796,7 @@ export default function ActiveExamInterface() {
                             </div>
                             {questions.some(q => q.type === 'tita') && (
                                 <div className="flex items-center gap-2 text-xs font-medium pt-1 border-t border-slate-200 dark:border-slate-700">
-                                    <span className="text-[9px] font-black bg-violet-500 text-white px-1 rounded leading-tight">T</span>
+                                    <span className="text-[9px] font-black bg-orange-500 text-white px-1 rounded leading-tight">T</span>
                                     <span className="text-slate-600 dark:text-slate-400">TITA — type your answer</span>
                                 </div>
                             )}
@@ -818,8 +818,8 @@ export default function ActiveExamInterface() {
                         <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
                             Your exam time has expired. Your answers are being submitted automatically.
                         </p>
-                        <div className="flex items-center justify-center gap-2 text-xs font-bold text-indigo-500">
-                            <div className="animate-spin size-4 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+                        <div className="flex items-center justify-center gap-2 text-xs font-bold text-orange-500">
+                            <div className="animate-spin size-4 border-2 border-orange-500 border-t-transparent rounded-full"></div>
                             Submitting your attempt...
                         </div>
                     </div>
@@ -848,7 +848,7 @@ export default function ActiveExamInterface() {
                             </button>
                             <button 
                                 onClick={confirmSubmission}
-                                className="flex-1 px-4 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-lg shadow-indigo-600/30 border-none cursor-pointer"
+                                className="flex-1 px-4 py-3 font-bold text-white bg-orange-600 hover:bg-orange-700 rounded-xl transition-all shadow-lg shadow-orange-600/30 border-none cursor-pointer"
                             >
                                 Yes, Submit
                             </button>

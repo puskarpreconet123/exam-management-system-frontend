@@ -75,7 +75,7 @@ export default function ReferralsPage() {
                 <div className="lg:col-span-1">
                     <div className="bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 p-6 shadow-sm sticky top-24">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="size-10 rounded-md bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                            <div className="size-10 rounded-md bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0">
                                 <span className="material-symbols-outlined text-xl">add_box</span>
                             </div>
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Code</h2>
@@ -92,7 +92,7 @@ export default function ReferralsPage() {
                                     placeholder="e.g. SCHOOL2026"
                                     value={newReferral.code}
                                     onChange={(e) => setNewReferral({ ...newReferral, code: e.target.value.toUpperCase() })}
-                                    className="w-full px-4 py-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 uppercase"
+                                    className="w-full px-4 py-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500/50 uppercase"
                                 />
                             </div>
                             <div>
@@ -105,7 +105,7 @@ export default function ReferralsPage() {
                                     placeholder="e.g. Springfield High"
                                     value={newReferral.schoolName}
                                     onChange={(e) => setNewReferral({ ...newReferral, schoolName: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                    className="w-full px-4 py-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500/50"
                                 />
                             </div>
                             <div>
@@ -115,7 +115,7 @@ export default function ReferralsPage() {
                                 <select
                                     value={newReferral.paymentType}
                                     onChange={(e) => setNewReferral({ ...newReferral, paymentType: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                    className="w-full px-4 py-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500/50"
                                 >
                                     <option value="offline">Offline</option>
                                     <option value="online">Online</option>
@@ -124,7 +124,7 @@ export default function ReferralsPage() {
                             <button
                                 type="submit"
                                 disabled={isCreating}
-                                className="w-full py-3.5 mt-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-bold shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                                className="w-full py-3.5 mt-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md font-bold shadow-lg shadow-orange-500/20 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
                             >
                                 {isCreating ? (
                                     <div className="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -144,7 +144,7 @@ export default function ReferralsPage() {
                     <div className="bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <span className="material-symbols-outlined text-indigo-500">list_alt</span>
+                                <span className="material-symbols-outlined text-orange-500">list_alt</span>
                                 Existing Codes
                             </h2>
                             <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold">
@@ -154,7 +154,7 @@ export default function ReferralsPage() {
 
                         {loading ? (
                             <div className="flex items-center justify-center p-12">
-                                <div className="animate-spin size-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
+                                <div className="animate-spin size-8 border-4 border-orange-600 border-t-transparent rounded-full"></div>
                             </div>
                         ) : referrals.length === 0 ? (
                             <div className="p-12 text-center flex flex-col items-center">
@@ -181,7 +181,7 @@ export default function ReferralsPage() {
                                         {referrals.map((ref) => (
                                             <tr key={ref._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
                                                 <td className="p-4">
-                                                    <div className="font-mono font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1.5 rounded-lg inline-block text-sm border border-indigo-100 dark:border-indigo-500/20 shadow-sm">
+                                                    <div className="font-mono font-black text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 rounded-lg inline-block text-sm border border-orange-100 dark:border-orange-500/20 shadow-sm">
                                                         {ref.code}
                                                     </div>
                                                 </td>
@@ -211,7 +211,7 @@ export default function ReferralsPage() {
                                                 <td className="p-4 text-center">
                                                     <button
                                                         onClick={() => setShareModal({ isOpen: true, referral: ref })}
-                                                        className="p-1.5 text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 rounded-lg inline-flex items-center justify-center"
+                                                        className="p-1.5 text-orange-500 hover:text-orange-700 dark:hover:text-orange-400 transition-colors bg-orange-50 hover:bg-orange-100 dark:bg-orange-500/10 dark:hover:bg-orange-500/20 rounded-lg inline-flex items-center justify-center"
                                                         title="Share Link & QR"
                                                     >
                                                         <span className="material-symbols-outlined text-[18px]">share</span>
@@ -268,7 +268,7 @@ export default function ReferralsPage() {
                                 <input 
                                     readOnly 
                                     value={`${window.location.origin}/register?ref=${shareModal.referral.code}`}
-                                    className="w-full text-center px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm font-medium rounded-md border border-slate-200 dark:border-slate-700 outline-none select-all focus:ring-2 focus:ring-indigo-500/50"
+                                    className="w-full text-center px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm font-medium rounded-md border border-slate-200 dark:border-slate-700 outline-none select-all focus:ring-2 focus:ring-orange-500/50"
                                 />
                             </div>
                             <button 
@@ -276,7 +276,7 @@ export default function ReferralsPage() {
                                     navigator.clipboard.writeText(`${window.location.origin}/register?ref=${shareModal.referral.code}`);
                                     showToast("Link copied to clipboard!", "success");
                                 }}
-                                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-md transition-all shadow-md shadow-indigo-500/20 flex justify-center items-center gap-2"
+                                className="w-full py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-md transition-all shadow-md shadow-orange-500/20 flex justify-center items-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-[20px]">content_copy</span>
                                 Copy Link
