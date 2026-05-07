@@ -160,7 +160,7 @@ export default function NotificationDropdown() {
                     </div>
 
                     {/* List */}
-                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                    <div className="max-h-100 overflow-y-auto custom-scrollbar">
                         {loading && notifications.length === 0 ? (
                             <div className="p-10 flex flex-col items-center justify-center gap-3 text-slate-400">
                                 <div className="size-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
