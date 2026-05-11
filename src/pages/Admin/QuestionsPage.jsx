@@ -17,6 +17,11 @@ export default function QuestionsPage() {
 
     const [filterBoard, setFilterBoard] = useState("General");
     const [filterClass, setFilterClass] = useState("General");
+    const [availableClasses, setAvailableClasses] = useState(["General", "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"]);
+    const [isOtherClass, setIsOtherClass] = useState(false);
+    const [customClass, setCustomClass] = useState("");
+    const [isEditOtherClass, setIsEditOtherClass] = useState(false);
+    const [editCustomClass, setEditCustomClass] = useState("");
 
     // Accordion state
     const [expandedSubject, setExpandedSubject] = useState(null);
@@ -75,7 +80,21 @@ export default function QuestionsPage() {
         }
     };
 
-    useEffect(() => { loadSummary(); }, [filterBoard, filterClass]);
+    const loadSettings = async () => {
+        try {
+            const { data } = await api.get('/auth/settings');
+            if (data.availableClasses) {
+                setAvailableClasses(data.availableClasses);
+            }
+        } catch (err) {
+            console.error("Failed to load classes", err);
+        }
+    };
+
+    useEffect(() => { 
+        loadSummary(); 
+        loadSettings();
+    }, [filterBoard, filterClass]);
 
     // Lazy-load questions for a specific subject+difficulty group
     const loadGroupQuestions = async (subject, difficulty, page = 1) => {
@@ -118,6 +137,15 @@ export default function QuestionsPage() {
     // Form handlers
     const handleSingleChange = (e) => {
         const { name, value } = e.target;
+        if (name === "class") {
+            if (value === "Other") {
+                setIsOtherClass(true);
+            } else {
+                setIsOtherClass(false);
+                setSingleForm(prev => ({ ...prev, class: value }));
+            }
+            return;
+        }
         setSingleForm(prev => {
             const next = { ...prev, [name]: value };
             if (name === "type") {
@@ -244,6 +272,15 @@ export default function QuestionsPage() {
             label: o.label,
             value: existingByLabel.get(o.label) || "",
         }));
+
+        const isKnownClass = availableClasses.includes(q.class);
+        setIsEditOtherClass(!isKnownClass && q.class !== "General");
+        if (!isKnownClass && q.class !== "General") {
+            setEditCustomClass(q.class);
+        } else {
+            setEditCustomClass("");
+        }
+
         setEditForm({
             text: q.text || "",
             subject: q.subject || "",
@@ -265,6 +302,15 @@ export default function QuestionsPage() {
 
     const handleEditChange = (e) => {
         const { name, value } = e.target;
+        if (name === "class") {
+            if (value === "Other") {
+                setIsEditOtherClass(true);
+            } else {
+                setIsEditOtherClass(false);
+                setEditForm(prev => ({ ...prev, class: value }));
+            }
+            return;
+        }
         setEditForm(prev => {
             const next = { ...prev, [name]: value };
             if (name === "type") {
@@ -467,19 +513,14 @@ export default function QuestionsPage() {
                                 className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all"
                             >
                                 <option value="General">General Class</option>
-                                <option value="Class 5">Class 5</option>
-                                <option value="Class 6">Class 6</option>
-                                <option value="Class 7">Class 7</option>
-                                <option value="Class 8">Class 8</option>
-                                <option value="Class 9">Class 9</option>
-                                <option value="Class 10">Class 10</option>
-                                <option value="Class 11">Class 11</option>
-                                <option value="Class 12">Class 12</option>
+                                {availableClasses.filter(c => c !== "General").map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
                             </select>
                             <button
                                 onClick={loadSummary}
                                 disabled={summaryLoading}
-                                className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 transition-all disabled:opacity-60 shadow-sm"
+                                className="cursor-pointer"
                             >
                                 <span className={`material-symbols-outlined text-orange-600 text-sm flex items-center justify-center ${summaryLoading ? 'animate-spin' : ''}`}>
                                     {summaryLoading ? 'sync' : 'refresh'}
@@ -800,18 +841,25 @@ export default function QuestionsPage() {
                                         </div>
                                         <div className="space-y-1">
                                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Class</label>
-                                            <select name="class" value={singleForm.class} onChange={handleSingleChange}
+                                            <select name="class" value={isOtherClass ? "Other" : singleForm.class} onChange={handleSingleChange}
                                                 className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none appearance-none">
-                                                <option value="General">General</option>
-                                                <option value="Class 5">Class 5</option>
-                                                <option value="Class 6">Class 6</option>
-                                                <option value="Class 7">Class 7</option>
-                                                <option value="Class 8">Class 8</option>
-                                                <option value="Class 9">Class 9</option>
-                                                <option value="Class 10">Class 10</option>
-                                                <option value="Class 11">Class 11</option>
-                                                <option value="Class 12">Class 12</option>
+                                                {availableClasses.map(c => (
+                                                    <option key={c} value={c}>{c}</option>
+                                                ))}
+                                                <option value="Other">Other...</option>
                                             </select>
+                                            {isOtherClass && (
+                                                <input
+                                                    type="text"
+                                                    value={customClass}
+                                                    onChange={(e) => {
+                                                        setCustomClass(e.target.value);
+                                                        setSingleForm(prev => ({ ...prev, class: e.target.value }));
+                                                    }}
+                                                    placeholder="Enter new class"
+                                                    className="w-full mt-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold focus:border-orange-500 outline-none transition-all"
+                                                />
+                                            )}
                                         </div>
                                     </div>
 
@@ -1114,18 +1162,25 @@ export default function QuestionsPage() {
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Class</label>
-                                    <select name="class" value={editForm.class} onChange={handleEditChange}
+                                    <select name="class" value={isEditOtherClass ? "Other" : editForm.class} onChange={handleEditChange}
                                         className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm font-bold focus:border-orange-500 transition-all outline-none appearance-none">
-                                        <option value="General">General</option>
-                                        <option value="Class 5">Class 5</option>
-                                        <option value="Class 6">Class 6</option>
-                                        <option value="Class 7">Class 7</option>
-                                        <option value="Class 8">Class 8</option>
-                                        <option value="Class 9">Class 9</option>
-                                        <option value="Class 10">Class 10</option>
-                                        <option value="Class 11">Class 11</option>
-                                        <option value="Class 12">Class 12</option>
+                                        {availableClasses.map(c => (
+                                            <option key={c} value={c}>{c}</option>
+                                        ))}
+                                        <option value="Other">Other...</option>
                                     </select>
+                                    {isEditOtherClass && (
+                                        <input
+                                            type="text"
+                                            value={editCustomClass}
+                                            onChange={(e) => {
+                                                setEditCustomClass(e.target.value);
+                                                setEditForm(prev => ({ ...prev, class: e.target.value }));
+                                            }}
+                                            placeholder="Enter new class"
+                                            className="w-full mt-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold focus:border-orange-500 outline-none transition-all"
+                                        />
+                                    )}
                                 </div>
                             </div>
 

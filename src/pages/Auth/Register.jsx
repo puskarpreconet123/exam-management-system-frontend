@@ -51,11 +51,17 @@ export default function Register() {
     const [phoneOtp, setPhoneOtp] = useState('');
     const [emailOtp, setEmailOtp] = useState('');
 
+    const [availableClasses, setAvailableClasses] = useState(["General", "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"]);
+    const [availableBoards, setAvailableBoards] = useState(["General", "CBSE", "ICSE", "State Board"]);
+
     useEffect(() => {
         api.get('/auth/settings')
             .then(res => {
                 setRegAmount(res.data.registrationAmount || 0);
                 setRazorpayKeyId(res.data.razorpayKeyId || '');
+                if (res.data.availableClasses) {
+                    setAvailableClasses(res.data.availableClasses);
+                }
             })
             .catch(err => console.error("Settings fetch failed", err));
 
@@ -326,7 +332,7 @@ export default function Register() {
                                 <FormInput label="Date of Birth *" type="date" name="dob" value={formData.dob} onChange={handleInputChange} required />
                                 <FormDropdown label="Board *" name="board" value={formData.board} onChange={handleInputChange} required options={[{ label: 'General', value: 'General' }, { label: 'CBSE', value: 'CBSE' }, { label: 'ICSE', value: 'ICSE' }, { label: 'State Board', value: 'State Board' }]} />
                                 <FormInput label="School Name *" name="schoolName" value={formData.schoolName} onChange={handleInputChange} required placeholder="University Name" />
-                                <FormDropdown label="Class *" name="className" value={formData.className} onChange={handleInputChange} required options={[{ label: 'General', value: 'General' }, { label: 'Class 5', value: 'Class 5' }, { label: 'Class 6', value: 'Class 6' }, { label: 'Class 7', value: 'Class 7' }, { label: 'Class 8', value: 'Class 8' }, { label: 'Class 9', value: 'Class 9' }, { label: 'Class 10', value: 'Class 10' }, { label: 'Class 11', value: 'Class 11' }, { label: 'Class 12', value: 'Class 12' }]} />
+                                <FormDropdown label="Class *" name="className" value={formData.className} onChange={handleInputChange} required options={availableClasses.map(c => ({ label: c, value: c }))} />
 
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Contact Number *</label>

@@ -19,6 +19,8 @@ export default function ExamsPage() {
     const [examSubjects, setExamSubjects] = useState([{ subject: '', count: '' }]);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [availableClasses, setAvailableClasses] = useState(["General", "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"]);
+    const menuRef = React.useRef(null);
 
     const [form, setForm] = useState({
         title: '',
@@ -49,6 +51,27 @@ export default function ExamsPage() {
 
     useEffect(() => {
         loadExams();
+        const fetchSettings = async () => {
+            try {
+                const res = await api.get('/auth/settings');
+                if (res.data.availableClasses) {
+                    setAvailableClasses(res.data.availableClasses);
+                }
+            } catch (e) {
+                console.error("Failed to fetch classes", e);
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setActiveMenuId(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     useEffect(() => {
@@ -385,47 +408,47 @@ export default function ExamsPage() {
                                             </td>
                                             <td className="px-8 py-6 text-right relative">
                                                 <button 
-                                                    onClick={() => setActiveMenuId(activeMenuId === exam._id ? null : exam._id)}
+                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setActiveMenuId(activeMenuId === exam._id ? null : exam._id);
+                                                    }}
                                                     className={`p-2 rounded-lg text-slate-400 transition-colors ${activeMenuId === exam._id ? 'bg-slate-100 dark:bg-slate-800 text-orange-600' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                                 >
                                                     <span className="material-symbols-outlined">more_vert</span>
                                                 </button>
-
                                                 {activeMenuId === exam._id && (
-                                                    <>
-                                                        <div className="fixed inset-0 z-10" onClick={() => setActiveMenuId(null)}></div>
-                                                        <div className={`absolute right-8 ${isLastFew ? 'bottom-16' : 'top-16'} w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 z-20 animate-in fade-in zoom-in-95 duration-200`}>
-                                                            <button 
-                                                                onClick={() => { openEditModal(exam); setActiveMenuId(null); }}
-                                                                className="w-full px-4 py-2.5 text-left text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
-                                                            >
-                                                                <span className="material-symbols-outlined text-lg text-orange-500">edit</span>
-                                                                Edit Exam
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => { viewResults(exam); setActiveMenuId(null); }}
-                                                                className="w-full px-4 py-2.5 text-left text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
-                                                            >
-                                                                <span className="material-symbols-outlined text-lg text-emerald-500">analytics</span>
-                                                                View Results
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => { handleClone(exam); setActiveMenuId(null); }}
-                                                                className="w-full px-4 py-2.5 text-left text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
-                                                            >
-                                                                <span className="material-symbols-outlined text-lg text-amber-500">content_copy</span>
-                                                                Clone Exam
-                                                            </button>
-                                                            <div className="my-1 border-t border-slate-100 dark:border-slate-700"></div>
-                                                            <button 
-                                                                onClick={() => { handleDelete(exam); setActiveMenuId(null); }}
-                                                                className="w-full px-4 py-2.5 text-left text-sm font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 transition-colors"
-                                                            >
-                                                                <span className="material-symbols-outlined text-lg">delete</span>
-                                                                Delete Exam
-                                                            </button>
-                                                        </div>
-                                                    </>
+                                                    <div ref={menuRef} className={`absolute right-8 ${isLastFew ? 'bottom-16' : 'top-16'} w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 z-20 animate-in fade-in zoom-in-95 duration-200`}>
+                                                        <button 
+                                                            onClick={() => { openEditModal(exam); setActiveMenuId(null); }}
+                                                            className="w-full px-4 py-2.5 text-left text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
+                                                        >
+                                                            <span className="material-symbols-outlined text-lg text-orange-500">edit</span>
+                                                            Edit Exam
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => { viewResults(exam); setActiveMenuId(null); }}
+                                                            className="w-full px-4 py-2.5 text-left text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
+                                                        >
+                                                            <span className="material-symbols-outlined text-lg text-emerald-500">analytics</span>
+                                                            View Results
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => { handleClone(exam); setActiveMenuId(null); }}
+                                                            className="w-full px-4 py-2.5 text-left text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 transition-colors"
+                                                        >
+                                                            <span className="material-symbols-outlined text-lg text-amber-500">content_copy</span>
+                                                            Clone Exam
+                                                        </button>
+                                                        <div className="my-1 border-t border-slate-100 dark:border-slate-700"></div>
+                                                        <button 
+                                                            onClick={() => { handleDelete(exam); setActiveMenuId(null); }}
+                                                            className="w-full px-4 py-2.5 text-left text-sm font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 transition-colors"
+                                                        >
+                                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                                            Delete Exam
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </td>
                                         </tr>
@@ -491,8 +514,9 @@ export default function ExamsPage() {
                                         <div className="space-y-1">
                                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Class</label>
                                             <select name="class" value={form.class} onChange={handleChange} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3.5 text-sm font-bold focus:border-orange-500 transition-all outline-none">
-                                                <option value="General">General</option>
-                                                {['5', '6', '7', '8', '9', '10', '11', '12'].map(c => <option key={c} value={`Class ${c}`}>Class {c}</option>)}
+                                                {availableClasses.map(c => (
+                                                    <option key={c} value={c}>{c}</option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
@@ -504,10 +528,10 @@ export default function ExamsPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setExamSubjects([...examSubjects, { subject: '', count: '' }])}
-                                                className="text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest flex items-center gap-1 hover:underline"
+                                                className="text-[10px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest flex items-center gap-1 "
                                             >
                                                 <span className="material-symbols-outlined text-sm">add</span>
-                                                Add Subject
+                                                <span className="cursor-pointer hover:underline">Add Subject</span>
                                             </button>
                                         </div>
                                         <div className="space-y-2">
